@@ -43,7 +43,7 @@ How to connect wires:
 | PB7 | VSync | | VGA VSync (14)
 | PB14 | CLK | Resistor 2K2 to keyboard CLK and resistor 3K3 to GND
 | PB15 | DATA | Resistor 2K2 to keyboard DATA and resistor 3K3 to GND
-| G | Ground | | VGA Ground (5,6,7,8,10), Resistor 3K3
+| G | Ground | | VGA Ground (5,6,7,8,10)
 
 ## Plans for the future
 * Save / load snapshot to / from flash
