@@ -1,3 +1,10 @@
+Please note that this project contains the following libraries with separate 
+licences:
+1) https://github.com/cbiffle/etl
+2) https://github.com/cbiffle/m4vgalib
+3) https://github.com/anotherlin/z80emu
+
+==============================================================================
 MIT License
 
 Copyright (c) 2018 Andrey Belykh
