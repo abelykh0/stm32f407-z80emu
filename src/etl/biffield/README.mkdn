@@ -1,0 +1,453 @@
+Biffields
+=========
+
+This is a preprocessor stunt that generates fluent, typesafe code for working
+with blocks of hardware registers containing bitfields.  While it generates
+code, it does not require any external tools or build system support.
+
+Biffields requires C++11 and is tested most thoroughly on GCC 4.6.2 and 4.8.3.
+
+
+Sales Pitch
+-----------
+
+When writing low level code for drivers and the like, one often needs to deal
+with memory-mapped peripherals.  These have registers that show up like a struct
+in memory, and each register is often split into fields of bits.
+
+C bitfields seem appealing for this, but they're the wrong thing to use: they
+make it difficult to control exactly when memory is read or written, and they're
+non-portable (though this is less of a concern for peripheral drivers).
+
+The "right" way to do this sort of thing has long been the "shift-and-or"
+method, but it's ugly:
+
+    foo1.cr2 = (foo1.cr2 & ~ctl_mask) | (value << ctl_offset);
+
+Biffields are an attempt at fixing this.  You define the structure of the
+registers in a text file, and Biffields gives you -- for free -- everything you
+see here:
+
+ - A struct layout that can alias the peripheral in memory, under control of a
+   linker script or (if you must) `#define`s.
+
+ - Accessors for registers that correctly use volatile and make the timing of
+   read/write clear.
+
+ - A type for each register that is as efficient as int, but provides higher
+   level manipulators for the bitfields in the register.  (Yes, it also can
+   act as a compile-time constant.)
+
+ - Static metadata about register structure, so that if you *do* have to resort
+   to bit twiddling, you won't have to hardcode indexes, sizes, and masks
+   separately.
+
+Biffields has been carefully designed and implemented to have little to no
+runtime overhead in terms of either execution speed or code space.
+
+
+The Basic Idea
+--------------
+
+The general pattern for using this library:
+
+ 1. Get a datasheet for your peripheral.  Let's call it `bob`.
+
+ 2. Find a block of related, contiguous (possibly with holes) registers you
+    would like to model.
+
+ 3. Write a `bob.reg` file defining the register layout and their contents.
+
+ 4. Write a `bob.h` file defining a struct that contains the Biffield generated
+    code.
+
+ 5. Place instances of the struct in memory wherever the peripheral appears,
+    using either preprocessor gymnastics or a linker script.
+
+Biffields requires no external tools or build system support -- it's implemented
+purely in the C preprocessor.
+
+
+A Brief Example
+---------------
+
+Assume we have a peripheral containing two 32-bit wide registers, with a 32-bit
+reserved "hole" between.
+
+           31                                                      0
+           +----------------------+---------+-+-+-+-+---------------+
+    CONFIG |    foo (16 bits)     | bar (4) |A|B|C|D|  reserved (8) |
+           +----------------------+---------+-+-+-+-+---------------+
+                                    hole here
+           +-----------------------------------+--------------------+
+    LASERS |   frequency (24 bits)             |   style (8 bits)   |
+           +-----------------------------------+--------------------+
+
+`foo`, `bar`, and `frequency` are simple numerical fields.  `A` through `D` are
+control bits.  `style` is an enumeration where some bit patterns are invalid.
+
+Both registers, for the sake of discussion, are read/write.
+
+We could describe this with the following:
+
+    ETL_BFF_REG_RW(uint32_t, config, 0,
+      ETL_BFF_FIELD(31:16, unsigned, foo)
+      ETL_BFF_FIELD(15:12, unsigned, bar)
+      ETL_BFF_FIELD(11:11, bool, A)
+      ETL_BFF_FIELD(10:10, bool, B)
+      ETL_BFF_FIELD( 9: 9, bool, C)
+      ETL_BFF_FIELD( 8: 8, bool, D)
+    )
+
+    ETL_BFF_REG_RESERVED(uint32_t, hole, 1)
+
+    ETL_BFF_REG_RW(uint32_t, lasers, 0,
+      ETL_BFF_FIELD  (31: 8, unsigned, frequency)
+      ETL_BFF_FIELD_E( 7: 0, unsigned, style,
+        ETL_BFF_ENUM(0b00000000, none)
+        ETL_BFF_ENUM(0b11110000, high)
+        ETL_BFF_ENUM(0b00001111, low)
+        ETL_BFF_ENUM(0b10101010, alternating1)
+        ETL_BFF_ENUM(0b01010101, alternating2)
+      )
+    )
+
+Assuming this is in a file named `death_ray.reg`, we could generate the
+corresponding access code with:
+
+    struct DeathRay {
+      #define ETL_BFF_DEFINITION_FILE "death_ray.reg"
+      #include <etl/biffield/generate.h>
+      #undef ETL_BFF_DEFINITION_FILE
+    };
+
+    extern DeathRay death_ray;
+
+This will produce:
+
+ 1. Fields in the struct to describe the physical memory layout.  The fields are
+    private, and must be accessed through...
+
+ 2. Accessor member functions.  The implementations are careful to preserve the
+    `volatile` aspect of register access, and will at some point also generate
+    barriers.
+
+ 3. Types for each register, which have their own accessors for getting at the
+    bitfields.
+
+We would use this code as follows:
+
+    // Change bit A and foo value in one write
+    death_ray.write_config(death_ray.read_config()
+                           .with_A(true)
+                           .with_foo(42));
+
+
+Gotchas
+-------
+
+Biffields is designed to be difficult to abuse.  It makes liberal use of
+`static_assert` in the generated code to catch mistakes and report them.
+However, there are some details you should be aware of.
+
+ 1. This library assumes that it can `#define` whatever it wants, as long as it
+    starts with `ETL_BFF_`.  It's careful to `#undef` what it `#define`s.  If
+    there are any collisions with non-Biffield macros, you will get warnings.
+
+ 2. We let you define the containing `struct` yourself so that you can add
+    member functions.  You *must not* add member fields, because they'll be
+    mapped into peripheral space and almost certainly surprise you.  Similarly,
+    you *must not* have the struct inherit from a non-empty base class, or
+    add virtual methods.  Biffield does not currently have an integrity check
+    for any of this, though you can guard against it yourself by using
+    `static_assert` on the struct's `sizeof`.
+
+ 3. It is possible, though difficult, to produce a name collision from two
+    similarly named registers.  Exactly how to do this is left as an exercise
+    for the reader; Biffields is designed to avoid it for non-pathological
+    hardware.
+
+ 4. Biffields is intended for modeling memory-mapped register banks, and will
+    not help with bitfield types used in other contexts, such as network
+    protocols.
+
+
+API Overview
+============
+
+This section describes patterns in the generated API.  All API is generated
+inside the scope of the container struct, to avoid name collisions.
+
+Rather than describing the API in abstract terms, we'll present API docs for
+a specific example register set:
+
+    // The single control register
+    ETL_BFF_REG_RW(uint16_t, CTRL,
+      // 8-bit speed field
+      ETL_BFF_FIELD      (15: 8, uint8_t, speed)
+      // Array of 8 1-bit channel enables
+      ETL_BFF_FIELD_ARRAY( 7: 0, 1, bool, ch_enable)
+    )
+
+    // Bank of 8 priority registers
+    ETL_BFF_REG_ARRAY_RW(uint8_t, PRIO, 8
+      ETL_BFF_FIELD( 7: 0, uint8_t, priority)
+    )
+
+Let's assume these are materialized as follows:
+
+    struct Reg {
+      #define ETL_BFF_DEFINITION_FILE "what/you/see/above"
+      #include <etl/biffield/generate.h>
+      #undef ETL_BFF_DEFINITION_FILE
+    };
+
+The sections below describe the members of `Reg` that result.
+
+Structural Metadata
+-------------------
+
+See: `generated_constants.h`
+
+Each field `foo` has a corresponding `foo_meta` struct containing structural
+metadata.
+
+```c++
+struct Reg {
+  ...
+
+  // Structural metadata holder for CTRL register
+  struct CTRL_meta {
+    // This struct acts as a namespace, disallow creation.
+    CTRL_meta() = delete;
+    CTRL_meta(CTRL_meta const &) = delete;
+
+    // The type of memory access used to read/write the register.
+    typedef uint16_t access_type;
+
+    // Per-field metadata begins here
+
+    // Speed field structural metadata - typical of scalar fields
+    struct speed {
+      // This struct acts as a namespace, disallow creation.
+      speed() = delete;
+      speed(speed const &) = delete;
+
+      // Bit range and count
+      static constexpr unsigned low_bit = 8;
+      static constexpr unsigned high_bit = 15;
+      static constexpr unsigned bit_count = 8;
+
+      // Masks, both right-justified and in-place.
+      static constexpr access_type low_mask = 0xFF;
+      static constexpr accss_type in_place_mask = 0xFF00;
+    };
+
+    // ch_enable field structural metadata - typical of array fields.
+    struct ch_enable {
+      // This struct acts as a namespace, disallow creation.
+      ch_enable() = delete;
+      ch_enable(ch_enable const &) = delete;
+
+      // Bit range and count
+      static constexpr unsigned low_bit = 0;
+      static constexpr unsigned high_bit = 7;
+      static constexpr unsigned bit_count = 8;
+
+      // Masks, both right-justified and in-place.
+      static constexpr access_type low_mask = 0xFF;
+      static constexpr accss_type in_place_mask = 0xFF00;
+
+      // Array element geometry
+      static constexpr unsigned bits_per_element = 1;
+      static constexpr unsigned element_count = 8;
+      static constexpr access_type low_element_mask = 0x1;
+
+      // Low bit of element by index.
+      static constexpr unsigned low_bit_of(unsigned index) {
+        return low_bit + index * bits_per_element;
+      }
+
+      // In-place element mask by index.
+      static constexpr access_type in_place_mask_of(unsigned index) {
+        return low_element_mask << low_bit_of(index);
+      }
+    };
+  };
+
+  // Structural metadata holder for PRIO register array.
+  struct PRIO_meta {
+    // This struct acts as a namespace, disallow creation.
+    PRIO_meta() = delete;
+    PRIO_meta(PRIO_meta const &) = delete;
+
+    // The type of memory access used to read/write the registers.
+    typedef uint8_t access_type;
+
+    // Per-field metadata begins here
+
+    // priority field structural metadata
+    struct priority {
+      // This struct acts as a namespace, disallow creation.
+      priority() = delete;
+      priority(priority const &) = delete;
+
+      // Bit range and count
+      static constexpr unsigned low_bit = 0;
+      static constexpr unsigned high_bit = 7;
+      static constexpr unsigned bit_count = 8;
+
+      // Masks, both right-justified and in-place.
+      static constexpr access_type low_mask = 0xFF;
+      static constexpr accss_type in_place_mask = 0xFF;
+    };
+  };
+  ...
+};
+```
+
+
+Value Types
+-----------
+
+See: `generate_value_types.h`
+
+The values read from and written to registers are not represented as simple
+primitive integers, but as *register value types*.  These are integer-sized
+objects that sport member functions for manipulating individual bit fields.
+They are intended for use like this:
+
+    // Read once and inspect fields separately
+    auto ctrl = device.read_CTRL();
+    if (ctrl.get_speed() > 0) { ... }
+    if (ctrl.get_ch_enable(1)) { ... }
+
+    // Update with change from previous read
+    device.write_CTRL(ctrl.with_ch_enable(1, false));
+
+    // Alter speed field *only*, atomically.
+    device.update_CTRL([] (CTRL_value_t v) { return v.with_speed(0); });
+
+Biffields value types are carefully designed to behave like integers at compile
+time.  There is essentially no cost to this abstraction.
+
+Continuing our running example:
+
+```c++
+struct Reg {
+  ...
+
+  class CTRL_value_t {
+  public:
+    // Shorthand reference to structural metadata produced above.
+    typedef CTRL_meta meta_type;
+    // Shorthand self-reference type.
+    typedef CTRL_value_t this_type;
+    // Shorthand for the memory access type
+    typedef CTRL_meta::access_type access_type;  // aka uint16_t
+
+    // Explicit conversion from the access type integer.
+    explicit constexpr CTRL_value_t(uint16_t);
+
+    // Zero constructor has all bits clear.
+    constexpr CTRL_value_t();
+
+    // Explicit cast to the memory access type.
+    explicit constexpr operator uint16_t() const;
+
+    // Per-field features begin here
+
+    // speed-field features, typical for a scalar field
+    // Derive a copy of this value with the speed field altered.
+    constexpr CTRL_value_t with_speed(uint8_t value) const;
+    // Extract the speed field.
+    constexpr uint8_t get_speed() const;
+
+    // ch_enable-field features, typical for an array field.
+    // Derive a copy of this value with one ch_enable field altered.
+    constexpr CTRL_value_t with_ch_enable(unsigned index, bool value) const;
+    // Extract a single ch_enable.
+    constexpr bool get_ch_enable(unsigned index) const;
+
+  private:
+    // The actual representation
+    uint16_t _bits;
+  };
+
+  ...
+};
+```
+
+
+Register Accessors
+------------------
+
+See: `generate_accessors.h`
+
+Registers can be read-only, read-write, or write-only.  Support for read-only
+registers is a bit wonky at this time -- the compiler tends to get a little
+freaked out about `const volatile` fields when no constructor initializes them.
+Thus, our running example contains only read-write fields.
+
+For each register `foo`, the top-level register bank class grows the following
+members:
+
+ - `read_foo()` performs a single read of the register and returns the result.
+
+ - `write_foo(foo_value_t)` writes a new value to the register unconditionally.
+
+ - `swap_foo(foo_value_t old, foo_value_t new)` performs an atomic compare and
+   swap, writing to the register only if it previously contained `old`.
+
+ - `update_foo(<function object>)` performs an atomic alteration of the register
+   contents, looping if necessary to win the compare-swap.  This is equivalent
+   to writing a loop around `swap_foo`.  The function object must have the type
+   `(foo_value_t) -> foo_value_t`.  Lambdas work great.
+
+In the case of an array field, each of these functions takes an index.
+
+To continue our example:
+
+```c++
+struct Reg {
+  ...
+
+  // Performs a single read of the CTRL register.
+  CTRL_value_t read_CTRL();
+
+  // Updates the CTRL register unconditionally.
+  void write_CTRL(CTRL_value_t);
+
+  // Attempts an atomic compare-exchange of the CTRL register's contents.
+  // Returns true on success, false on failure.
+  bool swap_CTRL(CTRL_value_t old, CTRL_value_t new);
+
+  // Performs an atomic update of the CTRL register's contents, using the
+  // provided function object to make the change and looping if needed to
+  // win the compare-exchange.
+  template <typename Fn>
+  void update_CTRL(Fn &&);
+
+
+  // Performs a single read of one of the PRIO registers.
+  PRIO_value_t read_PRIO(unsigned index);
+
+  // Updates one of the PRIO registers unconditionally.
+  void write_PRIO(unsigned index, PRIO_value_t);
+
+  // Attempts an atomic compare-exchange of one of the PRIO registers'
+  // contents.  Returns true on success, false on failure.
+  bool swap_PRIO(unsigned index, PRIO_value_t old, PRIO_value_t new);
+
+  // Performs an atomic update of one of the PRIO registers' contents, using
+  // the provided function object to make the change and looping if needed
+  // to win the compare-exchange.
+  template <typename Fn>
+  void update_PRIO(unsigned index, Fn &&);
+
+  ...
+};
+```
+
+Note that, at the moment, only the swap and update operations imply memory
+barriers.
