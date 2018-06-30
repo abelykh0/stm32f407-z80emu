@@ -50,3 +50,4 @@ How to connect wires:
 * The speed is faster than it is supposed to be
 * Sound (will probably require correct speed to work)
 * Some games don't work (not sure if it is an issue with the emulator or my code)
+* Upload snapshots using USB connection (ZModem if possible or XModem)
