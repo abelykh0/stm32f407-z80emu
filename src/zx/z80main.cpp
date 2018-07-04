@@ -70,7 +70,7 @@ int32_t zx_loop()
             for (int i = 0; i < COLORS_SIZE; i++)
             {
                 uint16_t color = zx::VideoMemoryColors[i];
-                if ((color & 0B10000000) != 0)
+                if ((color & 0x8080) != 0)
                 {
                     zx::VideoMemoryColors[i] = __builtin_bswap16(color);
                 }

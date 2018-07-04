@@ -11,5 +11,6 @@
 #define etl_stm32f4xx_tim3_handler TIM3_IRQHandler
 #define etl_stm32f4xx_tim4_handler TIM4_IRQHandler
 #define etl_armv7m_pend_sv_handler PendSV_Handler
+#define arena_reset()
 
 #endif  // VGA_VGA_H

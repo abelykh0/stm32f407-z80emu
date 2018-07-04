@@ -241,6 +241,7 @@ void init() {
 
   sync_off();
   video_off();
+  arena_reset();
 }
 
 void sync_off() {

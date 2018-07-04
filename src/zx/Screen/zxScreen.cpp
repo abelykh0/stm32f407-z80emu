@@ -81,13 +81,13 @@ uint16_t zx::ConvertSinclairColor(uint8_t sinclairColor)
     if (bright)
     {
         // This is only needed to correctly read back "bright black" color
-		result |= 0x4040;
+		result |= 0x4000;
     }
 
 	if ((sinclairColor & 0B10000000) != 0)
 	{
 		// Blink
-		result |= 0x8080;
+		result |= 0x8000;
 	}
 
 	return result;
@@ -101,15 +101,22 @@ uint8_t zx::ConvertToSinclairColor(uint16_t color)
     //               7      6      5      4      3    2    1    0
 
     uint8_t result = 0;
-    if ((color & 0x4040) != 0)
+
+	if ((color & 0x0080) != 0)
+	{
+		// Flash, need to swap bytes
+		color = __builtin_bswap16(color);
+	}
+
+    if ((color & 0x4000) != 0)
     {
         // Bright
         result |= 0B01000000;
     }
 
-	if ((color & 0x8080) != 0)
+	if ((color & 0x8000) != 0)
 	{
-		// Blink
+		// Flash
 		result |= 0B10000000;
 	}
 
