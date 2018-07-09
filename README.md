@@ -19,6 +19,7 @@ If you want to try my project, this is the only part that you need.
 | STM32F407 board | 1
 | VGA connector | 1
 | PS/2 Keyboard | 1
+| Power supply 5V DC for keyboard | 1
 | Resistors 470 Ohm | 3
 | Resistors 680 Ohm | 3
 | Resistors 2.2 KOhm | 2
