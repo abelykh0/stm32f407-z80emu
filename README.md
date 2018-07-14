@@ -4,6 +4,8 @@ Spectrum ZX 48K emulator (using STM32F407 microcontroller)
 ## What it can do
 It emulates Spectrum ZX 48K and can also display some debugging information
 
+![Breadboard](https://raw.githubusercontent.com/abelykh0/stm32f407-z80emu/master/doc/Breadboard.JPG)
+
 TODO: video
 
 ## Introduction
