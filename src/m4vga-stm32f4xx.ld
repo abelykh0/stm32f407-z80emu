@@ -176,7 +176,7 @@ SECTIONS
 }
 
 /* Standard ARMv7-M peripherals */
-INCLUDE src\etl\armv7m\peripherals.ld
+INCLUDE ../src/etl/armv7m/peripherals.ld
 
 /* STM32F4xx peripherals */
-INCLUDE src\etl\STM32F4xx\peripherals.ld
+INCLUDE ../src/etl/STM32F4xx/peripherals.ld
