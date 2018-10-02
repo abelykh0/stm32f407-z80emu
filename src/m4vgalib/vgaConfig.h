@@ -1,11 +1,17 @@
 #ifndef VGA_VGACONFIG_H
 #define VGA_VGACONFIG_H
 
-#include "startup.h"
+#include <string.h>
+#include "stm32f4xx_hal.h"
 
-#define VIDEO_GPIO gpioa
-#define VIDEO_GPIO_MASK 0x003F
-#define VIDEO_GPIO_ODR ((Word)&GPIOA->ODR)
+#define VIDEO_GPIO gpioe
+#define VIDEO_GPIO_MASK 0x3F00
+#define VIDEO_GPIO_ODR 0x40021015
+
+// HSYNC_PIN change requires other changes in code
+#define HSYNC_PIN Gpio::p15
+
+#define VSYNC_PIN Gpio::p14
 
 #define IRQ extern "C"
 #define etl_stm32f4xx_tim3_handler TIM3_IRQHandler

@@ -185,7 +185,7 @@ void init() {
   syscfg.write_cmpcr(syscfg.read_cmpcr().with_cmp_pd(true));
 
   // Turn a bunch of stuff on.
-  rcc.enable_clock(AhbPeripheral::gpiob);  // Sync signals
+  rcc.enable_clock(AhbPeripheral::gpiod);  // Sync signals
   rcc.enable_clock(AhbPeripheral::VIDEO_GPIO);  // Video
   rcc.enable_clock(AhbPeripheral::dma2);
 
@@ -245,8 +245,8 @@ void init() {
 }
 
 void sync_off() {
-  gpiob.set_mode((1 << 6) | (1 << 7), Gpio::Mode::input);
-  gpiob.set_pull((1 << 6) | (1 << 7), Gpio::Pull::down);
+  gpiod.set_mode(HSYNC_PIN | VSYNC_PIN, Gpio::Mode::input);
+  gpiod.set_pull(HSYNC_PIN | VSYNC_PIN, Gpio::Pull::down);
 }
 
 void video_off() {
@@ -255,16 +255,16 @@ void video_off() {
 }
 
 void sync_on() {
-  // Configure PB6 to produce hsync using TIM4_CH1
-  gpiob.set_alternate_function(Gpio::p6, 2);
-  gpiob.set_output_type(Gpio::p6, Gpio::OutputType::push_pull);
-  gpiob.set_output_speed(Gpio::p6, Gpio::OutputSpeed::fast_50mhz);
-  gpiob.set_mode(Gpio::p6, Gpio::Mode::alternate);
+  // Configure PD15 to produce hsync using TIM4_CH4
+  gpiod.set_alternate_function(HSYNC_PIN, 2);
+  gpiod.set_output_type(HSYNC_PIN, Gpio::OutputType::push_pull);
+  gpiod.set_output_speed(HSYNC_PIN, Gpio::OutputSpeed::fast_50mhz);
+  gpiod.set_mode(HSYNC_PIN, Gpio::Mode::alternate);
 
-  // Configure PB7 as GPIO output.
-  gpiob.set_output_type(Gpio::p7, Gpio::OutputType::push_pull);
-  gpiob.set_output_speed(Gpio::p7, Gpio::OutputSpeed::fast_50mhz);
-  gpiob.set_mode(Gpio::p7, Gpio::Mode::gpio);
+  // Configure PD14 as GPIO output.
+  gpiod.set_output_type(VSYNC_PIN, Gpio::OutputType::push_pull);
+  gpiod.set_output_speed(VSYNC_PIN, Gpio::OutputSpeed::fast_50mhz);
+  gpiod.set_mode(VSYNC_PIN, Gpio::Mode::gpio);
 }
 
 void video_on() {
@@ -295,19 +295,20 @@ static void configure_h_timer(Timing const &timing,
   tim.write_psc(apb_cycles_per_pixel - 1);
 
   tim.write_arr(timing.line_pixels - 1);
-  tim.write_ccr1(timing.sync_pixels);
+  tim.write_ccr4(timing.sync_pixels);
   tim.write_ccr2(timing.sync_pixels
                  + timing.back_porch_pixels - timing.video_lead);
   tim.write_ccr3(timing.sync_pixels
                  + timing.back_porch_pixels + timing.video_pixels);
 
-  tim.write_ccmr1(GpTimer::ccmr1_value_t()
-                  .with_oc1m(GpTimer::OcMode::pwm1)
-                  .with_cc1s(GpTimer::ccmr1_value_t::cc1s_t::output));
+  tim.write_ccmr2((GpTimer::ccmr2_value_t::access_type)
+		  	  	  GpTimer::ccmr1_value_t()
+                  .with_oc2m(GpTimer::OcMode::pwm1)
+                  .with_cc2s(GpTimer::ccmr1_value_t::cc2s_t::output));
 
   tim.write_ccer(GpTimer::ccer_value_t()
-                 .with_cc1e(true)
-                 .with_cc1p(
+                 .with_cc4e(true)
+                 .with_cc4p(
                      timing.hsync_polarity == Timing::Polarity::negative));
 
 }
@@ -378,8 +379,8 @@ void configure_timing(Timing const &timing) {
   // Note: timers still not running.
 
   switch (timing.vsync_polarity) {
-    case Timing::Polarity::positive: gpiob.clear(1 << 7); break;
-    case Timing::Polarity::negative: gpiob.set  (1 << 7); break;
+    case Timing::Polarity::positive: gpiod.clear(VSYNC_PIN); break;
+    case Timing::Polarity::negative: gpiod.set  (VSYNC_PIN); break;
   }
 
   // Scribble over working buffer to help catch bugs.
@@ -488,7 +489,7 @@ static void end_of_active_video() {
   if (next_line == current_timing.vsync_start_line
       || next_line == current_timing.vsync_end_line) {
     // Either edge of vsync pulse.
-    gpiob.toggle(Gpio::p7);
+    gpiod.toggle(VSYNC_PIN);
   } else if (next_line == uint16_t(current_timing.video_start_line - 1)) {
     // We're one line before scanout begins -- need to start rasterizing.
     state = State::starting;
