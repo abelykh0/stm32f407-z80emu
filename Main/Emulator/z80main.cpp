@@ -16,6 +16,7 @@ uint8_t RamBuffer[RAM_AVAILABLE];
 Z80_STATE _zxCpu;
 CONTEXT _zxContext;
 uint16_t _attributeCount;
+SpectrumScreen* _spectrumScreen;
 
 int _total;
 int _next_total = 0;
@@ -34,6 +35,7 @@ extern "C"
 
 void zx_setup(SpectrumScreen* spectrumScreen)
 {
+	_spectrumScreen = spectrumScreen;
 	_attributeCount = spectrumScreen->Settings.TextColumns * spectrumScreen->Settings.TextRows;
 
     _zxContext.readbyte = readbyte;
@@ -70,10 +72,10 @@ int32_t zx_loop()
             frames = 0;
             for (int i = 0; i < _attributeCount; i++)
             {
-                uint16_t color = _spectrumScreen.Settings.Attributes[i];
+                uint16_t color = _spectrumScreen->Settings.Attributes[i];
                 if ((color & 0x8080) != 0)
                 {
-                	_spectrumScreen.Settings.Attributes[i] = __builtin_bswap16(color);
+                	_spectrumScreen->Settings.Attributes[i] = __builtin_bswap16(color);
                 }
             }
         }
@@ -133,12 +135,12 @@ extern "C" uint8_t readbyte(uint16_t addr)
     else if (addr >= (uint16_t)0x5800)
     {
         // Screen Attributes
-        res = _spectrumScreen.ToSpectrumColor(_spectrumScreen.Settings.Attributes[addr - (uint16_t)0x5800]);
+        res = _spectrumScreen->ToSpectrumColor(_spectrumScreen->Settings.Attributes[addr - (uint16_t)0x5800]);
     }
     else if (addr >= (uint16_t)0x4000)
     {
         // Screen pixels
-        res = _spectrumScreen.Settings.Pixels[addr - (uint16_t)0x4000];
+        res = _spectrumScreen->Settings.Pixels[addr - (uint16_t)0x4000];
     }
     else
     {
@@ -165,12 +167,12 @@ extern "C" void writebyte(uint16_t addr, uint8_t data)
     else if (addr >= (uint16_t)0x5800)
     {
         // Screen Attributes
-    	_spectrumScreen.Settings.Attributes[addr - (uint16_t)0x5800] = _spectrumScreen.FromSpectrumColor(data);
+    	_spectrumScreen->Settings.Attributes[addr - (uint16_t)0x5800] = _spectrumScreen->FromSpectrumColor(data);
     }
     else if (addr >= (uint16_t)0x4000)
     {
         // Screen pixels
-    	_spectrumScreen.Settings.Pixels[addr - (uint16_t)0x4000] = data;
+    	_spectrumScreen->Settings.Pixels[addr - (uint16_t)0x4000] = data;
     }
 }
 
@@ -212,7 +214,7 @@ extern "C" void output(uint16_t port, uint8_t data)
     {
         // border color (no bright colors)
         uint8_t borderColor = (data & 0x7);
-        *_spectrumScreen.Settings.BorderColor = _spectrumScreen.FromSpectrumColor(borderColor) >> 8;
+        *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
     }
     break;
     default:
