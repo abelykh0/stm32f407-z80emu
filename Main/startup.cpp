@@ -1,6 +1,7 @@
 #include "startup.h"
 
 #include <string.h>
+#include <stdint.h>
 #include "stm32f4xx.h"
 #include "m4vgalib/vga.h"
 #include "m4vgalib/timing.h"
