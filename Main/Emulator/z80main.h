@@ -7,10 +7,10 @@
 
 using namespace Display;
 
+extern SpectrumScreen* _spectrumScreen;
+
 void zx_setup(SpectrumScreen* spectrumScreen);
-
 int32_t zx_loop();
-
 void zx_reset();
 
 #endif

@@ -145,7 +145,7 @@ void zx::ReadZ80Format(uint8_t* z80Snapshot)
         if (pageNumber == 8)
         {
             // 0x4000..0x5AFF
-        	_spectrumScreen.ShowScreenshot((const char*)tempBuffer);
+        	_spectrumScreen->ShowScreenshot((const char*)tempBuffer);
 
             // 0x5B00..0x7FFF
             memcpy(RamBuffer, &tempBuffer[0x1B00], 0x2500);
@@ -220,5 +220,5 @@ void ReadState(FileHeader* header)
     _zxCpu.pc = header->PC;
 
     uint8_t borderColor = (header->Flags1 & 0x0E) > 1;
-    *_spectrumScreen.Settings.BorderColor = _spectrumScreen.FromSpectrumColor(borderColor);
+    *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor);
 }
