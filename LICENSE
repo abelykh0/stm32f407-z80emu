@@ -1,12 +1,10 @@
 Please note that this project contains the following libraries with separate 
 licences:
-1) https://github.com/cbiffle/etl
-2) https://github.com/cbiffle/m4vgalib
-3) https://github.com/anotherlin/z80emu
+1) STMicroelectronics HAL and LL APIs are licensed under under the open-source BSD License
+2) cbiffle/etl is licensed under the BSD 2-Clause "Simplified" License (https://github.com/cbiffle/etl/blob/master/LICENSE)
+3) cbiffle/m4vgalib is licensed under the BSD 2-Clause "Simplified" License (https://github.com/cbiffle/m4vgalib/blob/master/LICENSE)
 
-In addition is contains Spectrum ROM and some sample Spectrum programs that 
-have a separate license.
-
+The rest is licensed under:
 ==============================================================================
 MIT License
 
