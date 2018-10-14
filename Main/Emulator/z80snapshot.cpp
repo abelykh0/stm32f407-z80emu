@@ -176,14 +176,14 @@ bool zx::LoadZ80Snapshot(FIL* file)
     FileHeader* header = (FileHeader*)tempBuffer;
     ReadState(header);
 
-    UINT bytesToRead = header->AdditionalBlockLength + 3;
+    UINT bytesToRead = header->AdditionalBlockLength - 2 + 3;
     readResult = f_read(file, tempBuffer, bytesToRead, &bytesRead);
     if (readResult != FR_OK || bytesRead != bytesToRead)
     {
     	return false;
     }
 
-    uint8_t* buffer = &tempBuffer[header->AdditionalBlockLength - 2];
+    uint8_t* buffer = &tempBuffer[bytesToRead - 3];
 
 	// Get pageSize and pageNumber
     uint16_t pageSize = *buffer;
@@ -239,7 +239,6 @@ bool zx::LoadZ80Snapshot(FIL* file)
 		buffer = tempBuffer;
 		if (bytesRead == 3)
 		{
-	        buffer += pageSize;
 	        pageSize = *buffer;
 	        buffer++;
 	        pageSize |= *buffer << 8;
