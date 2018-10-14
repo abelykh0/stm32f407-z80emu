@@ -13,5 +13,6 @@ extern SpectrumScreen MainScreen;
 void initializeVideo();
 void startVideo();
 bool loadScreenshot(const TCHAR* fileName);
+bool loadSnapshot(const TCHAR* fileName);
 
 #endif /* __EMULATOR_H__ */

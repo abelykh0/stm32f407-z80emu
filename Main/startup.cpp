@@ -13,8 +13,6 @@ extern "C" void initialize() {
 extern "C" void setup() {
 	startVideo();
 
-	loadScreenshot("BubbleBobble.scr");
-
 	DebugScreen.SetAttribute(0x0300);
 	DebugScreen.Print("#");
 	DebugScreen.SetAttribute(0x0C00);
@@ -52,7 +50,9 @@ extern "C" void setup() {
 	// Initialize PS2 Keyboard
 	Ps2_Initialize();
 
-	//zx_setup(&MainScreen);
+	zx_setup(&MainScreen);
+
+	loadSnapshot("Video Pool.z80");
 
 	// Initialize GPIOA
 	//rcc.enable_clock(AhbPeripheral::gpioa);
@@ -60,7 +60,7 @@ extern "C" void setup() {
 }
 
 extern "C" void loop() {
-	//zx_loop();
+	zx_loop();
 
 	// Blink LED on PA6
 	//gpioa.toggle(Gpio::p6);

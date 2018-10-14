@@ -7,6 +7,7 @@
 #include "m4vgalib/timing.h"
 #include "etl/stm32f4xx/gpio.h"
 #include "Keyboard/ps2Keyboard.h"
+#include "Emulator/z80snapshot.h"
 
 using namespace etl::stm32f4xx;
 
@@ -54,6 +55,24 @@ void startVideo() {
 	MainScreen.Clear();
 	vga::configure_band_list(&_band);
 	vga::video_on();
+}
+
+bool loadSnapshot(const TCHAR* fileName)
+{
+	FRESULT mountResult = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
+	if (mountResult == FR_OK) {
+		FIL fp;
+
+		f_open(&fp, fileName, FA_READ | FA_OPEN_EXISTING);
+
+		zx::LoadZ80Snapshot(&fp);
+
+		f_close(&fp);
+
+		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+	}
+
+	return true;
 }
 
 bool loadScreenshot(const TCHAR* fileName) {

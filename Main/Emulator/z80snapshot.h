@@ -2,11 +2,14 @@
 #define __Z80SNAPSHOT_INCLUDED__
 
 #include <stdint.h>
+#include "fatfs.h"
 
 namespace zx
 {
 
-void ReadZ80Format(uint8_t* z80Snapshot);
+void LoadZ80Snapshot(uint8_t* z80Snapshot);
+bool LoadZ80Snapshot(FIL* file);
+
 
 }
 

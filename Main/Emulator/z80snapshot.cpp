@@ -100,7 +100,7 @@ struct FileHeader
 void DecompressPage(uint8_t *page, uint16_t pageLength, uint8_t** destMemory, bool isCompressed);
 void ReadState(FileHeader* header);
 
-void zx::ReadZ80Format(uint8_t* z80Snapshot)
+void zx::LoadZ80Snapshot(uint8_t* z80Snapshot)
 {
     uint8_t tempBuffer[0x4000];
 
@@ -159,6 +159,101 @@ void zx::ReadZ80Format(uint8_t* z80Snapshot)
         pageNumber = *buffer;
         buffer++;
     }
+}
+
+bool zx::LoadZ80Snapshot(FIL* file)
+{
+    UINT bytesRead;
+    uint8_t tempBuffer[0x4000];
+
+    FRESULT readResult = f_read(file, tempBuffer, sizeof(FileHeader), &bytesRead);
+    if (readResult != FR_OK || bytesRead != sizeof(FileHeader))
+    {
+    	return false;
+    }
+
+    // Note: this requires little-endian processor
+    FileHeader* header = (FileHeader*)tempBuffer;
+    ReadState(header);
+
+    UINT bytesToRead = header->AdditionalBlockLength + 3;
+    readResult = f_read(file, tempBuffer, bytesToRead, &bytesRead);
+    if (readResult != FR_OK || bytesRead != bytesToRead)
+    {
+    	return false;
+    }
+
+    uint8_t* buffer = &tempBuffer[header->AdditionalBlockLength - 2];
+
+	// Get pageSize and pageNumber
+    uint16_t pageSize = *buffer;
+    buffer++;
+    pageSize |= *buffer << 8;
+    buffer++;
+    uint8_t pageNumber = *buffer;
+
+    do
+    {
+        bool isCompressed = (pageSize != 0xFFFF);
+        if (!isCompressed)
+        {
+        	pageSize = 0x4000;
+        }
+
+        uint8_t* memory = RamBuffer;
+        switch (pageNumber)
+        {
+            case 8:
+                memory = tempBuffer;
+                break;
+            case 4:
+                memory = &RamBuffer[0x8000 - 0x5B00];
+                break;
+            case 5:
+                memory = &RamBuffer[0xC000 - 0x5B00];
+                break;
+        }
+
+    	// Read page into tempBuffer
+		uint8_t* buffer = tempBuffer;
+		int remainingBytesInPage = pageSize;
+		do {
+			UINT bytesToRead = remainingBytesInPage < _MIN_SS ? remainingBytesInPage : _MIN_SS;
+			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
+			remainingBytesInPage -= bytesRead;
+			buffer += bytesRead;
+		} while (readResult == FR_OK && remainingBytesInPage > 0);
+
+		DecompressPage(tempBuffer, pageSize, &memory, isCompressed);
+
+        if (pageNumber == 8)
+        {
+            // 0x4000..0x5AFF
+        	_spectrumScreen->ShowScreenshot((const char*)tempBuffer);
+
+            // 0x5B00..0x7FFF
+            memcpy(RamBuffer, &tempBuffer[0x1B00], 0x2500);
+        }
+
+		readResult = f_read(file, tempBuffer, 3, &bytesRead);
+		buffer = tempBuffer;
+		if (bytesRead == 3)
+		{
+	        buffer += pageSize;
+	        pageSize = *buffer;
+	        buffer++;
+	        pageSize |= *buffer << 8;
+	        buffer++;
+	        pageNumber = *buffer;
+		}
+		else
+		{
+			pageSize = 0;
+		}
+
+    } while (pageSize > 0);
+
+    return true;
 }
 
 void DecompressPage(
