@@ -18,6 +18,8 @@ extern uint8_t _buffer16K_2[0x4000];
 void showKeyboardSetup();
 bool showKeyboardLoop();
 
+void showHelp();
+
 void initializeVideo();
 void startVideo();
 void showErrorMessage(const char* errorMessage);
