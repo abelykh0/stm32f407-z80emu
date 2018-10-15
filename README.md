@@ -2,7 +2,7 @@
 Spectrum ZX 48K emulator (using STM32F407 microcontroller)
 
 ## What it can do
-* Emulates Spectrum ZX 48K
+* Emulate Spectrum ZX 48K
 * Load snapshot in .Z80 format from SD card
 
 TODO: picture
