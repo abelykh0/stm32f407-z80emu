@@ -52,7 +52,7 @@ extern "C" void setup() {
 
 	zx_setup(&MainScreen);
 
-	loadSnapshot("Video Pool.z80");
+	loadSnapshot("circles.z80");
 
 	// Initialize GPIOA
 	//rcc.enable_clock(AhbPeripheral::gpioa);

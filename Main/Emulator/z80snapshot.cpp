@@ -165,6 +165,7 @@ bool zx::LoadZ80Snapshot(FIL* file)
 {
     UINT bytesRead;
     uint8_t tempBuffer[0x4000];
+    uint8_t tempBuffer2[0x4000];
 
     FRESULT readResult = f_read(file, tempBuffer, sizeof(FileHeader), &bytesRead);
     if (readResult != FR_OK || bytesRead != sizeof(FileHeader))
@@ -200,11 +201,11 @@ bool zx::LoadZ80Snapshot(FIL* file)
         	pageSize = 0x4000;
         }
 
-        uint8_t* memory = RamBuffer;
+        uint8_t* memory;
         switch (pageNumber)
         {
             case 8:
-                memory = tempBuffer;
+                memory = tempBuffer2;
                 break;
             case 4:
                 memory = &RamBuffer[0x8000 - 0x5B00];
@@ -212,6 +213,8 @@ bool zx::LoadZ80Snapshot(FIL* file)
             case 5:
                 memory = &RamBuffer[0xC000 - 0x5B00];
                 break;
+            default:
+            	continue;
         }
 
     	// Read page into tempBuffer
@@ -229,10 +232,10 @@ bool zx::LoadZ80Snapshot(FIL* file)
         if (pageNumber == 8)
         {
             // 0x4000..0x5AFF
-        	_spectrumScreen->ShowScreenshot((const char*)tempBuffer);
+        	_spectrumScreen->ShowScreenshot((const char*)memory);
 
             // 0x5B00..0x7FFF
-            memcpy(RamBuffer, &tempBuffer[0x1B00], 0x2500);
+            memcpy(RamBuffer, &memory[0x1B00], 0x2500);
         }
 
 		readResult = f_read(file, tempBuffer, 3, &bytesRead);
