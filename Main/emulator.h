@@ -7,12 +7,13 @@
 
 using namespace Display;
 
+#define DEBUG_COLUMNS 50
+#define DEBUG_ROWS 8
+
 extern Screen DebugScreen;
 extern SpectrumScreen MainScreen;
 
 void initializeVideo();
 void startVideo();
-bool loadScreenshot(const TCHAR* fileName);
-bool loadSnapshot(const TCHAR* fileName);
 
 #endif /* __EMULATOR_H__ */

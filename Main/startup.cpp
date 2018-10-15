@@ -21,7 +21,7 @@ extern "C" void setup()
 	// Initialize Spectrum emulator
 	zx_setup(&MainScreen);
 
-	loadSnapshot("circles.z80");
+	//loadSnapshot("circles.z80");
 }
 
 extern "C" void loop()

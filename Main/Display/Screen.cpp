@@ -97,9 +97,15 @@ void Screen::PrintAt(uint8_t x, uint8_t y, const char* str)
     this->Print(str);
 }
 
-void Screen::PrintAlignRight(uint8_t x, uint8_t y, const char *str)
+void Screen::PrintAlignRight(uint8_t y, const char *str)
 {
-    uint8_t leftX = x - strlen(str);
+    uint8_t leftX = this->Settings.TextColumns - strlen(str);
+    this->PrintAt(leftX, y, str);
+}
+
+void Screen::PrintAlignCenter(uint8_t y, const char *str)
+{
+    uint8_t leftX = this->Settings.TextColumns - strlen(str);
     this->PrintAt(leftX, y, str);
 }
 

@@ -52,7 +52,8 @@ public:
 	void SetCursorPosition(uint8_t x, uint8_t y);
 	void Print(const char* str);
 	void PrintAt(uint8_t x, uint8_t y, const char* str);
-	void PrintAlignRight(uint8_t x, uint8_t y, const char *str);
+	void PrintAlignRight(uint8_t y, const char *str);
+	void PrintAlignCenter(uint8_t y, const char *str);
 
 	RasterInfo rasterize(unsigned cycles_per_pixel, unsigned line_number,
 			Pixel *target) override;
