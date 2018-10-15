@@ -15,5 +15,7 @@ extern SpectrumScreen MainScreen;
 
 void initializeVideo();
 void startVideo();
+void showErrorMessage(const char* errorMessage);
+void showTitle(const char* title);
 
 #endif /* __EMULATOR_H__ */

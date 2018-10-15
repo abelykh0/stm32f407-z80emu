@@ -66,3 +66,17 @@ void startVideo()
 	vga::configure_band_list(&_band);
 	vga::video_on();
 }
+
+void showErrorMessage(const char* errorMessage)
+{
+	DebugScreen.SetAttribute(0x0310); // red on blue
+	DebugScreen.PrintAlignCenter(2, errorMessage);
+	DebugScreen.SetAttribute(0x3F10); // white on blue
+}
+
+void showTitle(const char* title)
+{
+	DebugScreen.SetAttribute(0x3F00); // white on black
+	DebugScreen.PrintAlignCenter(0, title);
+	DebugScreen.SetAttribute(0x3F10); // white on blue
+}

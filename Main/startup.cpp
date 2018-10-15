@@ -3,6 +3,7 @@
 
 #include "startup.h"
 #include "Emulator.h"
+#include "SDCard.h"
 #include "Emulator/z80main.h"
 #include "Keyboard/ps2Keyboard.h"
 
@@ -21,7 +22,11 @@ extern "C" void setup()
 	// Initialize Spectrum emulator
 	zx_setup(&MainScreen);
 
-	//loadSnapshot("circles.z80");
+	if (!loadSnapshotSetup())
+	{
+		showErrorMessage("Error when loading from SD card");
+	}
+
 }
 
 extern "C" void loop()

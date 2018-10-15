@@ -32,7 +32,7 @@ uint8_t* SpectrumScreen::GetPixelPointer(uint16_t line, uint8_t character)
 	return this->GetPixelPointer(line) + character;
 }
 
-void SpectrumScreen::ShowScreenshot(const char *screenshot)
+void SpectrumScreen::ShowScreenshot(const uint8_t* screenshot)
 {
 	memcpy(this->Settings.Pixels, screenshot, this->_pixelCount);
 	for (uint32_t i = 0; i < this->_attributeCount; i++)
