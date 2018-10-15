@@ -8,8 +8,12 @@
 #include "etl/stm32f4xx/gpio.h"
 #include "Keyboard/ps2Keyboard.h"
 #include "Emulator/z80snapshot.h"
+#include "resources/keyboard.h"
 
 using namespace etl::stm32f4xx;
+
+uint8_t _buffer16K_1[0x4000];
+uint8_t _buffer16K_2[0x4000];
 
 uint8_t  _debugPixels[52 * 8 * DEBUG_ROWS]; // number of text columns must be divisible by 4
 uint16_t _debugAttributes[52 * DEBUG_ROWS]; // number of text columns must be divisible by 4
@@ -47,6 +51,7 @@ vga::Band _band {
 };
 
 uint8_t readBuffer[_MIN_SS];
+bool _showingKeyboard;
 
 void initializeVideo()
 {
@@ -79,4 +84,27 @@ void showTitle(const char* title)
 	DebugScreen.SetAttribute(0x3F00); // white on black
 	DebugScreen.PrintAlignCenter(0, title);
 	DebugScreen.SetAttribute(0x3F10); // white on blue
+}
+
+void showKeyboardSetup()
+{
+	_showingKeyboard = true;
+	MainScreen.ShowScreenshot(spectrumKeyboard);
+}
+
+bool showKeyboardLoop()
+{
+	if (!_showingKeyboard)
+	{
+		return false;
+	}
+
+	int32_t scanCode = Ps2_GetScancode();
+	if (scanCode == 0 || (scanCode & 0xFF00) != 0xF000)
+	{
+		_showingKeyboard = false;
+		return false;
+	}
+
+	return true;
 }

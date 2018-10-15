@@ -9,26 +9,25 @@ using namespace zx;
 
 #define FILE_COLUMNS 3
 
-uint8_t _buffer16K_1[0x4000];
-uint8_t _buffer16K_2[0x4000];
-
 uint8_t _listColumns[FILE_COLUMNS];
 uint8_t _selectedFile = 0;
 uint8_t _fileCount;
 
 typedef TCHAR FileName[_MAX_LFN + 1];
-FileName* _fileNames = (FileName*)_buffer16K_2;
+FileName* _fileNames = (FileName*) _buffer16K_2;
+
+bool _loadingSnapshot = false;
 
 void GetFileCoord(uint8_t fileIndex, uint8_t* x, uint8_t* y)
 {
-	*x= fileIndex / (DEBUG_ROWS - 1);
-	*y= fileIndex % (DEBUG_ROWS - 1);
+	*x = fileIndex / (DEBUG_ROWS - 1);
+	*y = fileIndex % (DEBUG_ROWS - 1);
 }
 
 TCHAR* TruncateFileName(TCHAR* fileName)
 {
 	int maxLength = DEBUG_COLUMNS / FILE_COLUMNS - 1;
-	TCHAR* result = (TCHAR*)_buffer16K_1;
+	TCHAR* result = (TCHAR*) _buffer16K_1;
 	strncpy(result, fileName, maxLength);
 
 	result[maxLength - 1] = '\0';
@@ -54,18 +53,56 @@ void SetSelection(uint8_t selectedFile)
 	GetFileCoord(selectedFile, &x, &y);
 	DebugScreen.PrintAt(x, y, "\x10"); // ►
 
-	// Show screenshot for the selected file
-	TCHAR* fileName = _fileNames[selectedFile];
+	FRESULT fr;
 
+	// Show screenshot for the selected file
+	fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
+	if (fr == FR_OK)
+	{
+		FIL file;
+		bool scrFileFound = false;
+
+		TCHAR* fileName = _fileNames[selectedFile];
+
+		// Try to open file with the same name and .SCR extension
+		TCHAR scrFileName[_MAX_LFN + 1];
+		strncpy(scrFileName, fileName, _MAX_LFN + 1);
+		TCHAR* extension = strrchr(fileName, '.');
+		if (extension != nullptr)
+		{
+			strncpy(extension, ".scr", 4);
+			fr = f_open(&file, fileName, FA_READ | FA_OPEN_EXISTING);
+			if (fr == FR_OK)
+			{
+				LoadScreenshot(&file, _buffer16K_1);
+				f_close(&file);
+				scrFileFound = true;
+			}
+		}
+
+		if (!scrFileFound)
+		{
+			fr = f_open(&file, fileName, FA_READ | FA_OPEN_EXISTING);
+			if (fr == FR_OK)
+			{
+				LoadScreenFromZ80Snapshot(&file, _buffer16K_1);
+				f_close(&file);
+			}
+		}
+
+		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+	}
+}
+
+void loadSnapshot(const TCHAR* fileName)
+{
 	FRESULT fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
 	if (fr == FR_OK)
 	{
 		FIL file;
 		fr = f_open(&file, fileName, FA_READ | FA_OPEN_EXISTING);
-		if (fr == FR_OK)
-		{
-			LoadScreenFromZ80Snapshot(&file, _buffer16K_1);
-		}
+		LoadZ80Snapshot(&file, _buffer16K_1, _buffer16K_2);
+		f_close(&file);
 
 		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
 	}
@@ -92,9 +129,10 @@ bool loadSnapshotSetup()
 
 	if (fr == FR_OK)
 	{
-		for (int fileIndex = 0; fileIndex < maxFileCount && fileInfo.fname[0]; fileIndex++)
+		for (int fileIndex = 0; fileIndex < maxFileCount && fileInfo.fname[0];
+				fileIndex++)
 		{
-			strncpy(_fileNames[fileIndex], fileInfo.fname, _MAX_LFN);
+			strncpy(_fileNames[fileIndex], fileInfo.fname, _MAX_LFN + 1);
 			_fileCount++;
 
 			fr = f_findnext(&folder, &fileInfo);
@@ -128,19 +166,28 @@ bool loadSnapshotSetup()
 	// Unmount file system
 	f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
 
+	if (result)
+	{
+		_loadingSnapshot = true;
+	}
+
 	return result;
 }
 
-void loadSnapshotLoop()
+bool loadSnapshotLoop()
 {
-    int32_t scanCode = Ps2_GetScancode();
-    if (scanCode == 0
-    	|| (scanCode & 0xFF00) != 0xF000)
-    {
-    	return;
-    }
+	if (!_loadingSnapshot)
+	{
+		return false;
+	}
 
-    uint8_t previousSelection = _selectedFile;
+	int32_t scanCode = Ps2_GetScancode();
+	if (scanCode == 0 || (scanCode & 0xFF00) != 0xF000)
+	{
+		return true;
+	}
+
+	uint8_t previousSelection = _selectedFile;
 
 	scanCode = ((scanCode & 0xFF0000) >> 8 | (scanCode & 0xFF));
 	switch (scanCode)
@@ -151,17 +198,28 @@ void loadSnapshotLoop()
 			_selectedFile--;
 		}
 		break;
+
 	case KEY_DOWNARROW:
 		if (_selectedFile < _fileCount)
 		{
 			_selectedFile++;
 		}
 		break;
+
+	case KEY_ENTER:
+	case KEY_KP_ENTER:
+		loadSnapshot(_fileNames[_selectedFile]);
+		_loadingSnapshot = false;
+		return false;
+
+	case KEY_ESC:
+		_loadingSnapshot = false;
+		return false;
 	}
 
 	if (previousSelection == _selectedFile)
 	{
-		return;
+		return true;
 	}
 
 	uint8_t x, y;
@@ -169,69 +227,6 @@ void loadSnapshotLoop()
 	DebugScreen.PrintAt(x, y, " ");
 
 	SetSelection(_selectedFile);
+
+	return true;
 }
-
-/*
-
- bool loadSnapshot(const TCHAR* fileName)
- {
- FRESULT mountResult = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
- if (mountResult == FR_OK)
- {
- FIL fp;
-
- f_open(&fp, fileName, FA_READ | FA_OPEN_EXISTING);
-
- zx::LoadZ80Snapshot(&fp);
-
- f_close(&fp);
-
- f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
- }
-
- return true;
- }
-
- bool loadScreenshot(const TCHAR* fileName)
- {
- FRESULT mountResult = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
- if (mountResult == FR_OK)
- {
- FIL fp;
-
- f_open(&fp, fileName, FA_READ | FA_OPEN_EXISTING);
-
- UINT bytesRead;
- FRESULT readResult;
-
- uint8_t* buffer = _pixels;
- UINT totalBytesRead = 0;
- do
- {
- readResult = f_read(&fp, buffer, _MIN_SS, &bytesRead);
- totalBytesRead += bytesRead;
- buffer += bytesRead;
- } while (readResult == FR_OK && totalBytesRead < 32 * 8 * 24);
-
- totalBytesRead = 0;
- do
- {
- readResult = f_read(&fp, readBuffer, _MIN_SS, &bytesRead);
- for (uint32_t i = 0; i < bytesRead; i++)
- {
- _attributes[totalBytesRead + i] = MainScreen.FromSpectrumColor(
- readBuffer[i]);
- }
-
- totalBytesRead += bytesRead;
- } while (readResult == FR_OK && totalBytesRead < 32 * 24);
-
- f_close(&fp);
-
- f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
- }
-
- return true;
- }
-
- */

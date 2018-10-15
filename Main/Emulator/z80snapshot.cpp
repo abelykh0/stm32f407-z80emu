@@ -314,7 +314,11 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 		{
 			// This page contains screenshoot
 			uint8_t* buffer2 = &buffer1[0x2000];
-			DecompressPage(buffer1, 0x1B00, &buffer2, isCompressed);
+			if (pageSize > 0x2000)
+			{
+				pageSize = 0x2000;
+			}
+			DecompressPage(buffer1, pageSize, &buffer2, isCompressed);
 			_spectrumScreen->ShowScreenshot(buffer2);
 		}
 

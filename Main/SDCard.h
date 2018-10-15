@@ -2,7 +2,7 @@
 #define __SDCARD_H__
 
 bool loadSnapshotSetup();
-void loadSnapshotLoop();
+bool loadSnapshotLoop();
 
 bool saveSnapshotSetup();
 void saveSnapshotLoop();
