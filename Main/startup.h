@@ -2,12 +2,13 @@
 #define __STARTUP_H__
 
 #ifdef __cplusplus
- extern "C" {
+extern "C"
+{
 #endif
 
- void initialize();
- void setup();
- void loop();
+void initialize();
+void setup();
+void loop();
 
 #ifdef __cplusplus
 }
