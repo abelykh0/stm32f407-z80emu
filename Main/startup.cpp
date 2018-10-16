@@ -44,15 +44,24 @@ extern "C" void loop()
 		showHelp();
 		break;
 
-	case KEY_F2:
+	case KEY_F3:
 		if (!loadSnapshotSetup())
 		{
 			showErrorMessage("Error when loading from SD card");
 		}
 		break;
 
+	case KEY_F5:
+		zx_reset();
+		showHelp();
+		break;
+
 	case KEY_F10:
 		showKeyboardSetup();
+		break;
+
+	case KEY_F12:
+		//showRegisters();
 		break;
 	}
 }
