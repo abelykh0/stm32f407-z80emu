@@ -10,8 +10,8 @@ using namespace zx;
 #define FILE_COLUMNS 3
 
 uint8_t _fileColumnWidth = DEBUG_COLUMNS / FILE_COLUMNS;
-uint8_t _selectedFile = 0;
-uint8_t _fileCount;
+int16_t _selectedFile = 0;
+int16_t _fileCount;
 
 typedef TCHAR FileName[_MAX_LFN + 1];
 FileName* _fileNames = (FileName*) _buffer16K_2;
@@ -71,7 +71,7 @@ void SetSelection(uint8_t selectedFile)
 		if (extension != nullptr)
 		{
 			strncpy(extension, ".scr", 4);
-			fr = f_open(&file, fileName, FA_READ | FA_OPEN_EXISTING);
+			fr = f_open(&file, scrFileName, FA_READ | FA_OPEN_EXISTING);
 			if (fr == FR_OK)
 			{
 				LoadScreenshot(&file, _buffer16K_1);
@@ -203,7 +203,7 @@ bool loadSnapshotLoop()
 		break;
 
 	case KEY_DOWNARROW:
-		if (_selectedFile < _fileCount)
+		if (_selectedFile < _fileCount - 1)
 		{
 			_selectedFile++;
 		}
