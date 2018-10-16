@@ -35,4 +35,6 @@ void showTitle(const char* title);
 void saveState();
 void restoreState(bool restoreScreen);
 
+void showRegisters();
+
 #endif /* __EMULATOR_H__ */

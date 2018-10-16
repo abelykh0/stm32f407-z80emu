@@ -8,6 +8,7 @@
 #include "etl/stm32f4xx/gpio.h"
 #include "Keyboard/ps2Keyboard.h"
 #include "Emulator/z80snapshot.h"
+#include "Emulator/z80emu/z80emu.h"
 #include "resources/keyboard.h"
 
 using namespace etl::stm32f4xx;
@@ -56,6 +57,7 @@ vga::Band _band {
 
 uint8_t readBuffer[_MIN_SS];
 bool _showingKeyboard;
+extern Z80_STATE _zxCpu;
 
 void initializeVideo()
 {
@@ -145,4 +147,26 @@ void restoreState(bool restoreScreen)
 	}
 
 	showHelp();
+}
+
+void showRegisters()
+{
+    char* buf = (char*)_buffer16K_1;
+
+    sprintf(buf, "PC %04x  AF %04x  AF' %04x  I %02x",
+        _zxCpu.pc, _zxCpu.registers.word[Z80_AF],
+        _zxCpu.alternates[Z80_AF], _zxCpu.i);
+    DebugScreen.PrintAlignRight(0, buf);
+    sprintf(buf, "SP %04x  BC %04x  BC' %04x  R %02x",
+        _zxCpu.registers.word[Z80_SP], _zxCpu.registers.word[Z80_BC],
+        _zxCpu.alternates[Z80_BC], _zxCpu.r);
+    DebugScreen.PrintAlignRight(1, buf);
+    sprintf(buf, "IX %04x  DE %04x  DE' %04x  IM %x",
+        _zxCpu.registers.word[Z80_IX], _zxCpu.registers.word[Z80_DE],
+        _zxCpu.alternates[Z80_DE], _zxCpu.im);
+    DebugScreen.PrintAlignRight(2, buf);
+    sprintf(buf, "IY %04x  HL %04x  HL' %04x      ",
+        _zxCpu.registers.word[Z80_IY], _zxCpu.registers.word[Z80_HL],
+        _zxCpu.alternates[Z80_HL]);
+    DebugScreen.PrintAlignRight(3, buf);
 }

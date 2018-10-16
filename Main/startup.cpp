@@ -61,7 +61,7 @@ extern "C" void loop()
 		break;
 
 	case KEY_F12:
-		//showRegisters();
+		showRegisters();
 		break;
 	}
 }
