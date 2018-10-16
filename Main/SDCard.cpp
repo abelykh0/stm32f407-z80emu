@@ -110,6 +110,8 @@ void loadSnapshot(const TCHAR* fileName)
 
 bool loadSnapshotSetup()
 {
+	saveState();
+
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
 
@@ -213,10 +215,12 @@ bool loadSnapshotLoop()
 	case KEY_KP_ENTER:
 		loadSnapshot(_fileNames[_selectedFile]);
 		_loadingSnapshot = false;
+		restoreState(false);
 		return false;
 
 	case KEY_ESC:
 		_loadingSnapshot = false;
+		restoreState(true);
 		return false;
 	}
 
