@@ -115,6 +115,6 @@ void showHelp()
 	DebugScreen.Clear();
 
 	DebugScreen.PrintAt(0, 1, "F1  - show this screen");
-	DebugScreen.PrintAt(0, 1, "F2  - load snapshot from SD card");
-	DebugScreen.PrintAt(0, 1, "F10 - show keyboard layout");
+	DebugScreen.PrintAt(0, 2, "F2  - load snapshot from SD card");
+	DebugScreen.PrintAt(0, 3, "F10 - show keyboard layout");
 }

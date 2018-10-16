@@ -9,7 +9,7 @@ using namespace zx;
 
 #define FILE_COLUMNS 3
 
-uint8_t _listColumns[FILE_COLUMNS];
+uint8_t _fileColumnWidth = DEBUG_COLUMNS / FILE_COLUMNS;
 uint8_t _selectedFile = 0;
 uint8_t _fileCount;
 
@@ -21,7 +21,7 @@ bool _loadingSnapshot = false;
 void GetFileCoord(uint8_t fileIndex, uint8_t* x, uint8_t* y)
 {
 	*x = fileIndex / (DEBUG_ROWS - 1);
-	*y = fileIndex % (DEBUG_ROWS - 1);
+	*y = 1 + fileIndex % (DEBUG_ROWS - 1);
 }
 
 TCHAR* TruncateFileName(TCHAR* fileName)
@@ -67,7 +67,7 @@ void SetSelection(uint8_t selectedFile)
 		// Try to open file with the same name and .SCR extension
 		TCHAR scrFileName[_MAX_LFN + 1];
 		strncpy(scrFileName, fileName, _MAX_LFN + 1);
-		TCHAR* extension = strrchr(fileName, '.');
+		TCHAR* extension = strrchr(scrFileName, '.');
 		if (extension != nullptr)
 		{
 			strncpy(extension, ".scr", 4);
@@ -110,6 +110,9 @@ void loadSnapshot(const TCHAR* fileName)
 
 bool loadSnapshotSetup()
 {
+	DebugScreen.SetAttribute(0x3F10); // white on blue
+	DebugScreen.Clear();
+
 	showTitle("Load snapshot. ENTER, ESC, \x18, \x19, \x1A, \x1B"); // ↑, ↓, →, ←
 
 	FRESULT fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
@@ -150,8 +153,8 @@ bool loadSnapshotSetup()
 
 	for (int y = 1; y < DEBUG_ROWS; y++)
 	{
-		DebugScreen.PrintAt(_listColumns[1] - 1, y, "\xB3"); // │
-		DebugScreen.PrintAt(_listColumns[2] - 1, y, "\xB3"); // │
+		DebugScreen.PrintAt(_fileColumnWidth, y, "\xB3"); // │
+		DebugScreen.PrintAt(_fileColumnWidth * 2 + 1, y, "\xB3"); // │
 	}
 
 	uint8_t x, y;
