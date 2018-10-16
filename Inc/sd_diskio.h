@@ -1,6 +1,6 @@
 /**
   ******************************************************************************
-  * @file    sd_diskio.h (based on sd_diskio_dma_template.h v2.0.2)
+  * @file    sd_diskio.h (based on sd_diskio_template.h v2.0.2)
   * @brief   Header for sd_diskio.c module
   ******************************************************************************
   * This notice applies to any and all portions of this file
