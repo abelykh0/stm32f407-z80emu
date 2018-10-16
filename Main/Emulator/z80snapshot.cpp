@@ -6,8 +6,6 @@
 #include "Emulator/z80emu/z80emu.h"
 #include "Emulator/SpectrumScreen.h"
 
-//#include "debug/debugBand.h"
-
 extern Z80_STATE _zxCpu;
 extern uint8_t RamBuffer[];
 

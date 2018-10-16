@@ -6,8 +6,6 @@
 #include "z80input.h"
 #include "Keyboard/ps2Keyboard.h"
 
-//#include "debug/debugBand.h"
-
 #define CYCLES_PER_STEP 69888
 
 #define RAM_AVAILABLE 0xC000
@@ -84,8 +82,6 @@ int32_t zx_loop()
         int32_t scanCode = Ps2_GetScancode();
         if (scanCode > 0)
         {
-            char buf[30];
-
             if ((scanCode & 0xFF00) == 0xF000)
             {
                 // key up
@@ -96,18 +92,12 @@ int32_t zx_loop()
                 {
                     result = scanCode;
                 }
-
-                sprintf(buf, "kup %04lx", scanCode);
-                //debug_print(0, 1, buf);
             }
             else
             {
                 // key down
 
                 OnKey(scanCode, false);
-
-                sprintf(buf, "kdn %04lx", scanCode);
-                //debug_print(0, 0, buf);
             }
         }
 
