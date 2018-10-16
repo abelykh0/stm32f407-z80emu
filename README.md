@@ -9,11 +9,6 @@ TODO: picture
 
 TODO: video
 
-## Introduction
-This project uses 2 great libraries:
-* To display video using VGA: https://github.com/cbiffle/m4vgalib (which requires https://github.com/cbiffle/etl)
-* Z80 emulator: https://github.com/anotherlin/z80emu
-
 ## Installation
 If you want to try my project, this is the only part that you need.
 
@@ -48,6 +43,11 @@ How to connect wires:
 | PB14 | CLK | Resistor 2K2 to keyboard CLK and resistor 3K3 to GND
 | PB13 | DATA | Resistor 2K2 to keyboard DATA and resistor 3K3 to GND
 | G | Ground | | VGA Ground (5,6,7,8,10)
+
+## Third party software
+This project uses 2 great libraries:
+* To display video using VGA: https://github.com/cbiffle/m4vgalib (which requires https://github.com/cbiffle/etl)
+* Z80 emulator: https://github.com/anotherlin/z80emu
 
 ## Plans for the future / issues
 * Save snapshot to SD Card
