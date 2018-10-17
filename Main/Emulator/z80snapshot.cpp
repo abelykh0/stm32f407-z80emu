@@ -394,7 +394,7 @@ void DecompressPage(uint8_t *page,
 					size++;
 					if (maxSize > 0 && size >= maxSize)
 					{
-						break;
+						return;
 					}
 				}
 
@@ -408,7 +408,7 @@ void DecompressPage(uint8_t *page,
 		size++;
 		if (maxSize > 0 && size >= maxSize)
 		{
-			break;
+			return;
 		}
 	}
 }
