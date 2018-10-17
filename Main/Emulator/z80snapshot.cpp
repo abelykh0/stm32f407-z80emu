@@ -95,8 +95,9 @@ struct FileHeader
 	uint16_t PC;
 }__attribute__((packed));
 
-void DecompressPage(uint8_t *page, uint16_t pageLength, uint8_t** destMemory,
-		bool isCompressed);
+void DecompressPage(uint8_t *page,
+		uint16_t pageLength, bool isCompressed, uint16_t maxSize,
+		uint8_t* destMemory);
 void ReadState(FileHeader* header);
 
 void zx::LoadZ80Snapshot(uint8_t* z80Snapshot, uint8_t buffer1[0x4000])
@@ -132,11 +133,11 @@ void zx::LoadZ80Snapshot(uint8_t* z80Snapshot, uint8_t buffer1[0x4000])
 
 		if (pageSize == 0xFFFF)
 		{
-			DecompressPage(buffer, 0x4000, &memory, false);
+			DecompressPage(buffer, 0x4000, false, 0, memory);
 		}
 		else
 		{
-			DecompressPage(buffer, pageSize, &memory, true);
+			DecompressPage(buffer, pageSize, true, 0, memory);
 		}
 
 		if (pageNumber == 8)
@@ -226,7 +227,7 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 			buffer += bytesRead;
 		} while (readResult == FR_OK && remainingBytesInPage > 0);
 
-		DecompressPage(buffer1, pageSize, &memory, isCompressed);
+		DecompressPage(buffer1, pageSize, isCompressed, 0, memory);
 
 		if (pageNumber == 8)
 		{
@@ -312,11 +313,11 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 		{
 			// This page contains screenshoot
 			uint8_t* buffer2 = &buffer1[0x2000];
-			if (pageSize > 0x2000)
+			if (pageSize > 6912)
 			{
-				pageSize = 0x2000;
+				pageSize = 6912;
 			}
-			DecompressPage(buffer1, pageSize, &buffer2, isCompressed);
+			DecompressPage(buffer1, pageSize, isCompressed, 6912, buffer2);
 			_spectrumScreen->ShowScreenshot(buffer2);
 		}
 
@@ -364,10 +365,12 @@ bool zx::LoadScreenshot(FIL* file, uint8_t buffer1[0x4000])
 	return true;
 }
 
-void DecompressPage(uint8_t* page, uint16_t pageLength, uint8_t** destMemory,
-		bool isCompressed)
+void DecompressPage(uint8_t *page,
+		uint16_t pageLength, bool isCompressed, uint16_t maxSize,
+		uint8_t* destMemory)
 {
-	uint8_t* memory = *destMemory;
+	uint16_t size = 0;
+	uint8_t* memory = destMemory;
 	for (int i = 0; i < pageLength; i++)
 	{
 		if (i < pageLength - 4)
@@ -387,6 +390,12 @@ void DecompressPage(uint8_t* page, uint16_t pageLength, uint8_t** destMemory,
 				{
 					*memory = value;
 					memory++;
+
+					size++;
+					if (maxSize > 0 && size >= maxSize)
+					{
+						break;
+					}
 				}
 
 				continue;
@@ -395,6 +404,12 @@ void DecompressPage(uint8_t* page, uint16_t pageLength, uint8_t** destMemory,
 
 		*memory = page[i];
 		memory++;
+
+		size++;
+		if (maxSize > 0 && size >= maxSize)
+		{
+			break;
+		}
 	}
 }
 
