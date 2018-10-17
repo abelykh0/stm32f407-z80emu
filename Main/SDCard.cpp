@@ -65,7 +65,7 @@ void SetSelection(uint8_t selectedFile)
 		TCHAR* fileName = _fileNames[selectedFile];
 
 		// Try to open file with the same name and .SCR extension
-		TCHAR scrFileName[_MAX_LFN + 1];
+		TCHAR* scrFileName = (TCHAR*) _buffer16K_1;
 		strncpy(scrFileName, fileName, _MAX_LFN + 1);
 		TCHAR* extension = strrchr(scrFileName, '.');
 		if (extension != nullptr)
@@ -208,6 +208,20 @@ bool loadSnapshotLoop()
 		if (_selectedFile < _fileCount - 1)
 		{
 			_selectedFile++;
+		}
+		break;
+
+	case KEY_LEFTARROW:
+		if (_selectedFile >= DEBUG_ROWS)
+		{
+			_selectedFile -= DEBUG_ROWS - 1;
+		}
+		break;
+
+	case KEY_RIGHTARROW:
+		if (_selectedFile + DEBUG_ROWS < _fileCount)
+		{
+			_selectedFile += DEBUG_ROWS - 1;
 		}
 		break;
 
