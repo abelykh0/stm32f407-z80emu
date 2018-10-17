@@ -102,6 +102,7 @@ void showKeyboardSetup()
 	DebugScreen.PrintAlignCenter(2, "Press any key to return");
 
 	MainScreen.ShowScreenshot(spectrumKeyboard);
+	_spectrumScreenData.BorderColor = 0; // Black
 }
 
 bool showKeyboardLoop()
@@ -114,12 +115,12 @@ bool showKeyboardLoop()
 	int32_t scanCode = Ps2_GetScancode();
 	if (scanCode == 0 || (scanCode & 0xFF00) != 0xF000)
 	{
-		_showingKeyboard = false;
-		restoreState(true);
-		return false;
+		return true;
 	}
 
-	return true;
+	_showingKeyboard = false;
+	restoreState(true);
+	return false;
 }
 
 void showHelp()
