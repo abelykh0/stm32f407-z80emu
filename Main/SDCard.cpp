@@ -108,6 +108,11 @@ void loadSnapshot(const TCHAR* fileName)
 	}
 }
 
+static int fileCompare(const void* a, const void* b)
+{
+	return strncmp((const TCHAR*) a, (const TCHAR*) b, _MAX_LFN + 1);
+}
+
 bool loadSnapshotSetup()
 {
 	saveState();
@@ -117,7 +122,7 @@ bool loadSnapshotSetup()
 
 	showTitle("Load snapshot. ENTER, ESC, \x18, \x19, \x1A, \x1B"); // ↑, ↓, →, ←
 
-	FRESULT fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
+	FRESULT fr = f_mount(&SDFatFS, (const TCHAR*) SDPath, 1);
 	if (fr != FR_OK)
 	{
 		return false;
@@ -129,8 +134,8 @@ bool loadSnapshotSetup()
 	_fileCount = 0;
 	bool result = true;
 
-	fr = f_findfirst(&folder, &fileInfo, (TCHAR const*) "/",
-			(TCHAR const*) "*.z80");
+	fr = f_findfirst(&folder, &fileInfo, (const TCHAR*) "/",
+			(const TCHAR*) "*.z80");
 
 	if (fr == FR_OK)
 	{
@@ -151,6 +156,12 @@ bool loadSnapshotSetup()
 	else
 	{
 		result = false;
+	}
+
+	// Sort files alphabetically
+	if (_fileCount > 0)
+	{
+		qsort(_fileNames, _fileCount, _MAX_LFN + 1, fileCompare);
 	}
 
 	for (int y = 1; y < DEBUG_ROWS; y++)
