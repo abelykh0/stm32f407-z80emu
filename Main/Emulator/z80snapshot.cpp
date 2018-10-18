@@ -270,7 +270,6 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 
 	// Note: this requires little-endian processor
 	FileHeader* header = (FileHeader*) buffer1;
-	ReadState(header);
 
 	UINT bytesToRead = header->AdditionalBlockLength - 2 + 3;
 	readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
