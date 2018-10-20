@@ -1,4 +1,5 @@
 #include <string.h>
+#include <ctype.h>
 
 #include "SDCard.h"
 #include "Emulator.h"
@@ -110,7 +111,17 @@ void loadSnapshot(const TCHAR* fileName)
 
 static int fileCompare(const void* a, const void* b)
 {
-	return strncmp((const TCHAR*) a, (const TCHAR*) b, _MAX_LFN + 1);
+	TCHAR* file1 = (TCHAR*)_buffer16K_1;
+	for (int i = 0; i <= _MAX_LFN; i++){
+		file1[i] = tolower(((TCHAR*)a)[i]);
+	}
+
+	TCHAR* file2 = (TCHAR*)&_buffer16K_1[_MAX_LFN + 2];
+	for (int i = 0; i <= _MAX_LFN; i++){
+		file2[i] = tolower(((TCHAR*)b)[i]);
+	}
+
+	return strncmp(file1, file2, _MAX_LFN + 1);
 }
 
 bool loadSnapshotSetup()
