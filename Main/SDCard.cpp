@@ -20,7 +20,7 @@ bool _loadingSnapshot = false;
 
 void GetFileCoord(uint8_t fileIndex, uint8_t* x, uint8_t* y)
 {
-	*x = fileIndex / (DEBUG_ROWS - 1);
+	*x = fileIndex / (DEBUG_ROWS - 1) * (_fileColumnWidth + 1);
 	*y = 1 + fileIndex % (DEBUG_ROWS - 1);
 }
 
