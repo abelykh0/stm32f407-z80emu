@@ -119,6 +119,7 @@ bool loadSnapshotSetup()
 
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
+	*MainScreen.Settings.BorderColor = 0x10;
 
 	showTitle("Load snapshot. ENTER, ESC, \x18, \x19, \x1A, \x1B"); // ↑, ↓, →, ←
 
@@ -223,14 +224,14 @@ bool loadSnapshotLoop()
 		break;
 
 	case KEY_LEFTARROW:
-		if (_selectedFile >= DEBUG_ROWS)
+		if (_selectedFile >= DEBUG_ROWS - 1)
 		{
 			_selectedFile -= DEBUG_ROWS - 1;
 		}
 		break;
 
 	case KEY_RIGHTARROW:
-		if (_selectedFile + DEBUG_ROWS < _fileCount)
+		if (_selectedFile + DEBUG_ROWS <= _fileCount)
 		{
 			_selectedFile += DEBUG_ROWS - 1;
 		}
