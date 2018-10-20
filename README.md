@@ -5,7 +5,7 @@ Spectrum ZX 48K emulator (using STM32F407 microcontroller)
 * Emulate Spectrum ZX 48K
 * Load snapshot in .Z80 format from SD card
 
-![Breadboard](https://raw.githubusercontent.com/abelykh0/stm32f407-z80emu/master/doc/stm32f407-z80emu.JPG)
+![Breadboard](https://raw.githubusercontent.com/abelykh0/stm32f407-z80emu/master/doc/stm32f407-z80emu.jpg)
 
 TODO: video
 
