@@ -129,10 +129,11 @@ void showHelp()
 	DebugScreen.Clear();
 
 	DebugScreen.PrintAt(0, 1, "F1  - show this screen");
-	DebugScreen.PrintAt(0, 2, "F3  - load snapshot from SD card");
-	DebugScreen.PrintAt(0, 3, "F5  - reset");
-	DebugScreen.PrintAt(0, 4, "F10 - show keyboard layout");
-	DebugScreen.PrintAt(0, 5, "F12 - show registers");
+	DebugScreen.PrintAt(0, 2, "F2  - save snapshot to SD card");
+	DebugScreen.PrintAt(0, 3, "F3  - load snapshot from SD card");
+	DebugScreen.PrintAt(0, 4, "F5  - reset");
+	DebugScreen.PrintAt(0, 5, "F10 - show keyboard layout");
+	DebugScreen.PrintAt(0, 6, "F12 - show registers");
 }
 
 void saveState()

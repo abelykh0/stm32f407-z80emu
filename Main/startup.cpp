@@ -32,6 +32,11 @@ extern "C" void loop()
 		return;
 	}
 
+	if (saveSnapshotLoop())
+	{
+		return;
+	}
+
 	if (showKeyboardLoop())
 	{
 		return;
@@ -42,6 +47,13 @@ extern "C" void loop()
 	{
 	case KEY_F1:
 		showHelp();
+		break;
+
+	case KEY_F2:
+		if (!saveSnapshotSetup())
+		{
+			showErrorMessage("Cannot initialize SD card");
+		}
 		break;
 
 	case KEY_F3:
