@@ -20,10 +20,12 @@ private:
     void Bitmap(uint16_t x, uint16_t y, const unsigned char *bmp,
                 uint16_t i, uint8_t width, uint8_t lines);
     void CursorNext();
+    void InvertColor();
 
 	uint16_t _startLine;
     uint16_t _horizontalBorder;
     uint8_t _verticalBorder;
+    bool _isCursorVisible;
 
 protected:
 	virtual uint8_t* GetPixelPointer(uint16_t line);
@@ -50,6 +52,9 @@ public:
 	void SetFont(const uint8_t* font);
 	void SetAttribute(uint16_t attribute);
 	void SetCursorPosition(uint8_t x, uint8_t y);
+	void ShowCursor();
+	void HideCursor();
+
 	void Print(const char* str);
 	void PrintAt(uint8_t x, uint8_t y, const char* str);
 	void PrintAlignRight(uint8_t y, const char *str);

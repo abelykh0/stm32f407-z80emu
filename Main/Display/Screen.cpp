@@ -15,6 +15,7 @@ Screen::Screen(VideoSettings settings, uint16_t startLine, uint16_t height)
 {
 	this->Settings = settings;
 	this->_startLine = startLine;
+	this->_isCursorVisible = false;
 
 	this->_hResolutionNoBorder = this->Settings.TextColumns * 8;
 	this->_hResolution = this->Settings.Timing->video_pixels / this->Settings.Scale;
@@ -74,10 +75,37 @@ void Screen::SetCursorPosition(uint8_t x, uint8_t y)
 		y = this->Settings.TextRows - 1;
 	}
 
+    if (this->_isCursorVisible)
+    {
+    	this->InvertColor();
+    }
+
 	this->_cursor_x = x;
 	this->_cursor_y = y;
+
+    if (this->_isCursorVisible)
+    {
+    	this->InvertColor();
+    }
 }
 
+void Screen::ShowCursor()
+{
+    if (!this->_isCursorVisible)
+    {
+    	this->_isCursorVisible = true;
+    	this->InvertColor();
+    }
+}
+
+void Screen::HideCursor()
+{
+    if (this->_isCursorVisible)
+    {
+    	this->_isCursorVisible = false;
+    	this->InvertColor();
+    }
+}
 void Screen::Print(const char* str)
 {
     if (this->_font == nullptr)
@@ -286,6 +314,13 @@ void Screen::CursorNext()
 		}
 	}
 	this->SetCursorPosition(x, y);
+}
+
+void Screen::InvertColor()
+{
+    uint16_t originalColor = this->Settings.Attributes[this->_cursor_y * this->Settings.TextColumns + this->_cursor_x];
+    uint16_t newColor = __builtin_bswap16(originalColor);
+    this->Settings.Attributes[this->_cursor_y * this->Settings.TextColumns + this->_cursor_x] = newColor;
 }
 
 void Screen::Draw4(uint8_t *bitmap, uint16_t *colors, uint8_t *dest)
