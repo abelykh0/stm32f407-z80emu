@@ -124,6 +124,7 @@ bool showKeyboardLoop()
 
 void showHelp()
 {
+	DebugScreen.HideCursor();
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
 

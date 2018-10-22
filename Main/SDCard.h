@@ -5,6 +5,6 @@ bool loadSnapshotSetup();
 bool loadSnapshotLoop();
 
 bool saveSnapshotSetup();
-void saveSnapshotLoop();
+bool saveSnapshotLoop();
 
 #endif /* __SDCARD_H__ */

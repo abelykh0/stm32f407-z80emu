@@ -18,6 +18,7 @@ typedef TCHAR FileName[_MAX_LFN + 1];
 FileName* _fileNames = (FileName*) _buffer16K_2;
 
 bool _loadingSnapshot = false;
+bool _savingSnapshot = false;
 
 void GetFileCoord(uint8_t fileIndex, uint8_t* x, uint8_t* y)
 {
@@ -122,6 +123,85 @@ static int fileCompare(const void* a, const void* b)
 	}
 
 	return strncmp(file1, file2, _MAX_LFN + 1);
+}
+
+bool saveSnapshotSetup()
+{
+	DebugScreen.SetAttribute(0x3F10); // white on blue
+	DebugScreen.Clear();
+
+	showTitle("Save snapshot. ENTER, ESC, BS, \x1A, \x1B"); // →, ←
+
+	FRESULT fr = f_mount(&SDFatFS, (const TCHAR*) SDPath, 1);
+	if (fr != FR_OK)
+	{
+		return false;
+	}
+
+	// Unmount file system
+	f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+
+	DebugScreen.PrintAt(0, 2, "Enter file name:");
+	DebugScreen.SetCursorPosition(0, 3);
+	DebugScreen.ShowCursor();
+	_savingSnapshot = true;
+
+	return true;
+}
+
+bool saveSnapshotLoop()
+{
+	if (!_savingSnapshot)
+	{
+		return false;
+	}
+
+	int32_t scanCode = Ps2_GetScancode();
+	if (scanCode == 0 || (scanCode & 0xFF00) != 0xF000)
+	{
+		return true;
+	}
+
+	scanCode = ((scanCode & 0xFF0000) >> 8 | (scanCode & 0xFF));
+	switch (scanCode)
+	{
+	case KEY_LEFTARROW:
+		break;
+
+	case KEY_RIGHTARROW:
+		break;
+
+	case KEY_BACKSPACE:
+		break;
+
+	//#define KEY_HOME     0xE06C
+	//#define KEY_END      0xE069
+
+	case KEY_ENTER:
+	case KEY_KP_ENTER:
+		// TODO
+		_savingSnapshot = false;
+		restoreState(false);
+		return false;
+
+	case KEY_ESC:
+		_savingSnapshot = false;
+		restoreState(false);
+		return false;
+
+	default:
+		char character = Ps2_ConvertScancode(scanCode);
+		if (character != '\0')
+		{
+			char* text = (char*)_buffer16K_1;
+			text[0] = character;
+			text[1] = '\0';
+			DebugScreen.Print(text);
+		}
+		break;
+	}
+
+	return true;
 }
 
 bool loadSnapshotSetup()

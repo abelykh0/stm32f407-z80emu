@@ -134,6 +134,7 @@ extern "C" {
 
 void Ps2_Initialize();
 int32_t Ps2_GetScancode();
+char Ps2_ConvertScancode(int32_t scanCode);
 
 #ifdef __cplusplus
 }

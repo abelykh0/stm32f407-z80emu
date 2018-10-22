@@ -192,7 +192,7 @@ void Screen::PrintChar(char c, uint16_t color)
 			this->SetCursorPosition(0, this->_cursor_y + 1);
 		}
 		break;
-	case 8: //backspace
+	case '\b': //backspace
 		if (this->_cursor_x > 0)
 		{
 			this->PrintCharAt(this->_cursor_x - 1, this->_cursor_y, ' ', color);
