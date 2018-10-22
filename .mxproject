@@ -1,7 +1,7 @@
 [PreviousGenFiles]
-HeaderPath=D:/Projects/GitHub/stm32f407-z80emu/Inc
+HeaderPath=E:/GitHub/stm32f407-z80emu/Inc
 HeaderFiles=ffconf.h;bsp_driver_sd.h;sd_diskio.h;fatfs.h;usb_device.h;usbd_conf.h;usbd_desc.h;usbd_cdc_if.h;stm32f4xx_it.h;stm32f4xx_hal_conf.h;main.h;
-SourcePath=D:/Projects/GitHub/stm32f407-z80emu/Src
+SourcePath=E:/GitHub/stm32f407-z80emu/Src
 SourceFiles=bsp_driver_sd.c;sd_diskio.c;fatfs.c;usb_device.c;usbd_conf.c;usbd_desc.c;usbd_cdc_if.c;stm32f4xx_it.c;stm32f4xx_hal_msp.c;main.c;
 
 [PreviousLibFiles]
