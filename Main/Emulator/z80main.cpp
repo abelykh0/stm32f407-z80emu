@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "startup.h"
 
+#include "stm32f4xx_hal.h"
 #include "z80main.h"
 #include "z80input.h"
 #include "Keyboard/ps2Keyboard.h"
@@ -20,6 +21,7 @@ int _total;
 int _next_total = 0;
 uint8_t zx_data = 0;
 uint8_t frames = 0;
+uint32_t _ticks = 0;
 
 extern "C"
 {
@@ -102,6 +104,13 @@ int32_t zx_loop()
         }
 
         Z80Interrupt(&_zxCpu, 0xff, &_zxContext);
+
+        // delay
+        while (HAL_GetTick() < _ticks + 19)
+        {
+        }
+
+		_ticks = HAL_GetTick();
     }
 
     return result;
