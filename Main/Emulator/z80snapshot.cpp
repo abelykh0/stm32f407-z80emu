@@ -21,8 +21,9 @@ extern uint8_t RamBuffer[];
  10      1       Interrupt register
  11      1       Refresh register (Bit 7 is not significant!)
  12      1       Bit 0  : Bit 7 of the R-register
- Bit 1-3: Border color
- Bit 4-7: No meaning
+                 Bit 1-3: Border color
+                 Bit 4-7: No meaning
+                 If byte 12 is 255, it has to be regarded as being 1
  13      2       DE register pair
  15      2       BC' register pair
  17      2       DE' register pair
@@ -34,14 +35,14 @@ extern uint8_t RamBuffer[];
  27      1       Interrupt flipflop, 0=DI, otherwise EI
  28      1       IFF2
  29      1       Bit 0-1: Interrupt mode (0, 1 or 2)
- Bit 2  : 1=Issue 2 emulation
- Bit 3  : 1=Double interrupt frequency
- Bit 4-5: unused
- Bit 6-7: 0=Cursor/Protek/AGF joystick
- 1=Kempston joystick
- 2=Sinclair 2 Left joystick (or user
- defined, for version 3 .z80 files)
- 3=Sinclair 2 Right joystick
+                 Bit 2  : 1=Issue 2 emulation
+                 Bit 3  : 1=Double interrupt frequency
+                 Bit 4-5: unused
+                 Bit 6-7: 0=Cursor/Protek/AGF joystick
+                 1=Kempston joystick
+                 2=Sinclair 2 Left joystick (or user
+                 defined, for version 3 .z80 files)
+                 3=Sinclair 2 Right joystick
  30 0x1E 2       Length of additional header block (see below)
  ===========================
  32 0x20 2       Program counter
@@ -60,11 +61,11 @@ extern uint8_t RamBuffer[];
  Byte    Length  Description
  ---------------------------
  0       2       Length of compressed data (without this 3-byte header)
- If length=0xffff, data is 16384 bytes long and not compressed
+                 If length=0xffff, data is 16384 bytes long and not compressed
  2       1       Page number, for ZX Spectrum 48K:
- 8: 4000-7fff
- 4: 8000-bfff
- 5: c000-ffff
+                 8: 4000-7fff
+                 4: 8000-bfff
+                 5: c000-ffff
  3       [0]     Data
 
  */
@@ -95,68 +96,20 @@ struct FileHeader
 	uint16_t PC;
 }__attribute__((packed));
 
-void DecompressPage(uint8_t *page,
-		uint16_t pageLength, bool isCompressed, uint16_t maxSize,
-		uint8_t* destMemory);
+void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
+		uint16_t maxSize, uint8_t* destMemory);
 void ReadState(FileHeader* header);
+void SaveState(FileHeader* header);
 
-void zx::LoadZ80Snapshot(uint8_t* z80Snapshot, uint8_t buffer1[0x4000])
+bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 {
 	// Note: this requires little-endian processor
-	FileHeader* header = (FileHeader*) z80Snapshot;
+	FileHeader* header = (FileHeader*) buffer1;
+	SaveState(header);
 
-	ReadState(header);
+	//memset(&buffer1[sizeof(FileHeader)], 0, header->AdditionalBlockLength);
 
-	uint8_t* buffer = &z80Snapshot[0x20 + header->AdditionalBlockLength];
-	uint16_t pageSize = *buffer;
-	buffer++;
-	pageSize |= *buffer << 8;
-	buffer++;
-	uint8_t pageNumber = *buffer;
-	buffer++;
-
-	uint8_t* memory = RamBuffer;
-	while (pageSize > 0)
-	{
-		switch (pageNumber)
-		{
-		case 8:
-			memory = buffer1;
-			break;
-		case 4:
-			memory = &RamBuffer[0x8000 - 0x5B00];
-			break;
-		case 5:
-			memory = &RamBuffer[0xC000 - 0x5B00];
-			break;
-		}
-
-		if (pageSize == 0xFFFF)
-		{
-			DecompressPage(buffer, 0x4000, false, 0, memory);
-		}
-		else
-		{
-			DecompressPage(buffer, pageSize, true, 0, memory);
-		}
-
-		if (pageNumber == 8)
-		{
-			// 0x4000..0x5AFF
-			_spectrumScreen->ShowScreenshot(buffer1);
-
-			// 0x5B00..0x7FFF
-			memcpy(RamBuffer, &buffer1[0x1B00], 0x2500);
-		}
-
-		buffer += pageSize;
-		pageSize = *buffer;
-		buffer++;
-		pageSize |= *buffer << 8;
-		buffer++;
-		pageNumber = *buffer;
-		buffer++;
-	}
+	return false;
 }
 
 bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
@@ -364,9 +317,8 @@ bool zx::LoadScreenshot(FIL* file, uint8_t buffer1[0x4000])
 	return true;
 }
 
-void DecompressPage(uint8_t *page,
-		uint16_t pageLength, bool isCompressed, uint16_t maxSize,
-		uint8_t* destMemory)
+void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
+		uint16_t maxSize, uint8_t* destMemory)
 {
 	uint16_t size = 0;
 	uint8_t* memory = destMemory;
@@ -414,6 +366,12 @@ void DecompressPage(uint8_t *page,
 
 void ReadState(FileHeader* header)
 {
+	// If byte 12 is 255, it has to be regarded as being 1
+	if (header->Flags1 == 255)
+	{
+		header->Flags1 = 1;
+	}
+
 	_zxCpu.registers.byte[Z80_A] = header->A;
 	_zxCpu.registers.byte[Z80_F] = header->F;
 	_zxCpu.registers.word[Z80_BC] = header->BC;
@@ -434,7 +392,68 @@ void ReadState(FileHeader* header)
 	_zxCpu.iff2 = header->IFF2;
 	_zxCpu.pc = header->PC;
 
-	uint8_t borderColor = (header->Flags1 & 0x0E) > 1;
+	uint8_t borderColor = (header->Flags1 & 0x0E) >> 1;
 	*_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(
 			borderColor);
 }
+
+void SaveState(FileHeader* header)
+{
+	header->Version = 0;
+	header->AdditionalBlockLength = 54;
+
+	header->A = _zxCpu.registers.byte[Z80_A];
+	header->F = _zxCpu.registers.byte[Z80_F];
+	header->BC = _zxCpu.registers.word[Z80_BC];
+	header->HL = _zxCpu.registers.word[Z80_HL];
+	header->SP = _zxCpu.registers.word[Z80_SP];
+	header->InterruptRegister = _zxCpu.i;
+	header->RefreshRegister = _zxCpu.r;
+	header->DE = _zxCpu.registers.word[Z80_DE];
+	header->BC_Dash = _zxCpu.alternates[Z80_BC];
+	header->DE_Dash = _zxCpu.alternates[Z80_DE];
+	header->HL_Dash = _zxCpu.alternates[Z80_HL];
+	header->F_Dash = _zxCpu.alternates[Z80_AF] & 0xFF;
+	header->A_Dash = (_zxCpu.alternates[Z80_AF] & 0xFF00) >> 8;
+	header->IY = _zxCpu.registers.word[Z80_IY];
+	header->IX = _zxCpu.registers.word[Z80_IX];
+	header->InterruptFlipFlop = _zxCpu.iff1;
+	header->IFF2 = _zxCpu.iff2;
+	header->PC = _zxCpu.pc;
+
+	// Bit 0  : Bit 7 of the R-register
+	// Bit 1-3: Border color
+	header->Flags1 = (_zxCpu.r & 0x80) >> 7;
+	header->Flags1 |= (*_spectrumScreen->Settings.BorderColor & 0x03) << 1;
+
+	// Bit 0-1: Interrupt mode (0, 1 or 2)
+	header->Flags2 = _zxCpu.im & 0x03;
+}
+
+//uint8_t CountEqualBytes(uint8_t wert, uint32_t adr)
+//{
+//	uint8_t ret_wert = 1;
+//	uint8_t n, test;
+//
+//	// max 255
+//	for (n = 0; n < 254; n++)
+//	{
+//		adr++;
+//		if (adr >= 0xFFFF)
+//		{
+//			break;
+//		}
+//
+//		test = RdZ80(adr);
+//		if (test == wert)
+//		{
+//			ret_wert++;
+//		}
+//		else
+//		{
+//			break;
+//		}
+//	}
+//
+//	return (ret_wert);
+//}
