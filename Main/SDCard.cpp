@@ -43,6 +43,12 @@ TCHAR* TruncateFileName(TCHAR* fileName)
 	return result;
 }
 
+void noScreenshot()
+{
+	MainScreen.Clear();
+	MainScreen.PrintAlignCenter(11, "Error");
+}
+
 void SetSelection(uint8_t selectedFile)
 {
 	if (_fileCount == 0)
@@ -77,7 +83,10 @@ void SetSelection(uint8_t selectedFile)
 			fr = f_open(&file, scrFileName, FA_READ | FA_OPEN_EXISTING);
 			if (fr == FR_OK)
 			{
-				LoadScreenshot(&file, _buffer16K_1);
+				if (!LoadScreenshot(&file, _buffer16K_1))
+				{
+					noScreenshot();
+				}
 				f_close(&file);
 				scrFileFound = true;
 			}
@@ -88,7 +97,10 @@ void SetSelection(uint8_t selectedFile)
 			fr = f_open(&file, fileName, FA_READ | FA_OPEN_EXISTING);
 			if (fr == FR_OK)
 			{
-				LoadScreenFromZ80Snapshot(&file, _buffer16K_1);
+				if (!LoadScreenFromZ80Snapshot(&file, _buffer16K_1))
+				{
+					noScreenshot();
+				}
 				f_close(&file);
 			}
 		}
