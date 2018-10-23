@@ -39,12 +39,12 @@ protected:
 
     uint8_t* _font = (uint8_t*)font8x8;
     uint16_t _attribute = 0x3F10; // white on blue
+
+public:
     uint8_t _cursor_x = 0;
     uint8_t _cursor_y = 0;
 
-public:
-	VideoSettings Settings;
-
+    VideoSettings Settings;
     Screen(VideoSettings settings);
 	Screen(VideoSettings settings, uint16_t startLine, uint16_t height);
 

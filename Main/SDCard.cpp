@@ -19,6 +19,7 @@ FileName* _fileNames = (FileName*) _buffer16K_2;
 
 bool _loadingSnapshot = false;
 bool _savingSnapshot = false;
+char* _snapshotName = (char*)&_buffer16K_1[2];
 
 void GetFileCoord(uint8_t fileIndex, uint8_t* x, uint8_t* y)
 {
@@ -130,7 +131,7 @@ bool saveSnapshotSetup()
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
 
-	showTitle("Save snapshot. ENTER, ESC, BS, \x1A, \x1B"); // →, ←
+	showTitle("Save snapshot. ENTER, ESC, BS");
 
 	FRESULT fr = f_mount(&SDFatFS, (const TCHAR*) SDPath, 1);
 	if (fr != FR_OK)
@@ -144,6 +145,7 @@ bool saveSnapshotSetup()
 	DebugScreen.PrintAt(0, 2, "Enter file name:");
 	DebugScreen.SetCursorPosition(0, 3);
 	DebugScreen.ShowCursor();
+	memset(_snapshotName, 0, _MAX_LFN + 1);
 	_savingSnapshot = true;
 
 	return true;
@@ -157,7 +159,7 @@ bool saveSnapshotLoop()
 	}
 
 	int32_t scanCode = Ps2_GetScancode();
-	if (scanCode == 0 || (scanCode & 0xFF00) != 0xF000)
+	if (scanCode == 0 || (scanCode & 0xFF00) == 0xF000)
 	{
 		return true;
 	}
@@ -165,24 +167,23 @@ bool saveSnapshotLoop()
 	scanCode = ((scanCode & 0xFF0000) >> 8 | (scanCode & 0xFF));
 	switch (scanCode)
 	{
-	case KEY_LEFTARROW:
-		break;
-
-	case KEY_RIGHTARROW:
-		break;
-
 	case KEY_BACKSPACE:
+		if (DebugScreen._cursor_x > 0)
+		{
+			DebugScreen.PrintAt(DebugScreen._cursor_x - 1, DebugScreen._cursor_y, " ");
+			DebugScreen.SetCursorPosition(DebugScreen._cursor_x - 1, DebugScreen._cursor_y);
+			_snapshotName[DebugScreen._cursor_x] = '\0';
+		}
 		break;
-
-	//#define KEY_HOME     0xE06C
-	//#define KEY_END      0xE069
 
 	case KEY_ENTER:
 	case KEY_KP_ENTER:
 		// TODO
-		_savingSnapshot = false;
-		restoreState(false);
-		return false;
+		//_savingSnapshot = false;
+		//restoreState(false);
+		//return false;
+		DebugScreen.PrintAt(0, 5, _snapshotName);
+		return true;
 
 	case KEY_ESC:
 		_savingSnapshot = false;
@@ -191,10 +192,14 @@ bool saveSnapshotLoop()
 
 	default:
 		char character = Ps2_ConvertScancode(scanCode);
-		if (character != '\0')
+		if (DebugScreen._cursor_x < _fileColumnWidth && character != '\0'
+			&& character != '\\' && character != '/' && character != ':'
+			&& character != '*' && character != '?' && character != '"'
+			&& character != '<' && character != '>' && character != '|')
 		{
 			char* text = (char*)_buffer16K_1;
 			text[0] = character;
+			_snapshotName[DebugScreen._cursor_x] = character;
 			text[1] = '\0';
 			DebugScreen.Print(text);
 		}
