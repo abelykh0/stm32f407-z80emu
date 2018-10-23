@@ -46,7 +46,9 @@ TCHAR* TruncateFileName(TCHAR* fileName)
 void noScreenshot()
 {
 	MainScreen.Clear();
-	MainScreen.PrintAlignCenter(11, "Error");
+	MainScreen.SetAttribute(0x0310); // red on blue
+	MainScreen.PrintAlignCenter(11, "Error while reading selected file");
+	MainScreen.SetAttribute(0x3F10); // white on blue
 }
 
 void SetSelection(uint8_t selectedFile)
