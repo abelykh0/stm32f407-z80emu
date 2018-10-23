@@ -111,7 +111,12 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 
 	FRESULT writeResult;
 	UINT bytesWritten;
-	writeResult = f_write(file, buffer1, sizeof(FileHeader) + header->AdditionalBlockLength - 2, &bytesWritten);
+	UINT bytesToWrite = sizeof(FileHeader) + header->AdditionalBlockLength - 2;
+	writeResult = f_write(file, buffer1, bytesToWrite, &bytesWritten);
+	if (writeResult != FR_OK || bytesWritten != bytesToWrite)
+	{
+		return false;
+	}
 
 	uint8_t pages[] = { 8, 4, 5 };
 
@@ -137,6 +142,10 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 		*buffer = pageNumber;
 
 		writeResult = f_write(file, buffer1, 3, &bytesWritten);
+		if (writeResult != FR_OK || bytesWritten != 3)
+		{
+			return false;
+		}
 
 		switch (pageNumber)
 		{
@@ -166,10 +175,13 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 		int remainingBytesInPage = pageSize;
 		do
 		{
-			UINT bytesToWrite =
-					remainingBytesInPage < _MIN_SS ?
-							remainingBytesInPage : _MIN_SS;
+			bytesToWrite = remainingBytesInPage < _MIN_SS ? remainingBytesInPage : _MIN_SS;
 			writeResult = f_write(file, buffer, bytesToWrite, &bytesWritten);
+			if (writeResult != FR_OK || bytesWritten != bytesToWrite)
+			{
+				return false;
+			}
+
 			remainingBytesInPage -= bytesWritten;
 			buffer += bytesWritten;
 		} while (writeResult == FR_OK && remainingBytesInPage > 0);
@@ -182,9 +194,11 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 		uint8_t buffer2[0x4000])
 {
 	UINT bytesRead;
+	UINT bytesToRead;
 
-	FRESULT readResult = f_read(file, buffer1, sizeof(FileHeader), &bytesRead);
-	if (readResult != FR_OK || bytesRead != sizeof(FileHeader))
+	bytesToRead = sizeof(FileHeader);
+	FRESULT readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
+	if (readResult != FR_OK || bytesRead != bytesToRead)
 	{
 		return false;
 	}
@@ -193,7 +207,7 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 	FileHeader* header = (FileHeader*) buffer1;
 	ReadState(header);
 
-	UINT bytesToRead = header->AdditionalBlockLength - 2 + 3;
+	bytesToRead = header->AdditionalBlockLength - 2 + 3;
 	readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
 	if (readResult != FR_OK || bytesRead != bytesToRead)
 	{
@@ -238,10 +252,13 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 		int remainingBytesInPage = pageSize;
 		do
 		{
-			UINT bytesToRead =
-					remainingBytesInPage < _MIN_SS ?
-							remainingBytesInPage : _MIN_SS;
+			bytesToRead = remainingBytesInPage < _MIN_SS ? remainingBytesInPage : _MIN_SS;
 			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
+			if (readResult != FR_OK || bytesRead != bytesToRead)
+			{
+				return false;
+			}
+
 			remainingBytesInPage -= bytesRead;
 			buffer += bytesRead;
 		} while (readResult == FR_OK && remainingBytesInPage > 0);
@@ -258,6 +275,11 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 		}
 
 		readResult = f_read(file, buffer1, 3, &bytesRead);
+		if (readResult != FR_OK)
+		{
+			return false;
+		}
+
 		buffer = buffer1;
 		if (bytesRead == 3)
 		{
@@ -323,6 +345,11 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 					remainingBytesInPage < _MIN_SS ?
 							remainingBytesInPage : _MIN_SS;
 			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
+			if (readResult != FR_OK || bytesRead != bytesToRead)
+			{
+				return false;
+			}
+
 			remainingBytesInPage -= bytesRead;
 			buffer += bytesRead;
 		} while (readResult == FR_OK && remainingBytesInPage > 0);
@@ -340,6 +367,11 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 		}
 
 		readResult = f_read(file, buffer1, 3, &bytesRead);
+		if (readResult != FR_OK)
+		{
+			return false;
+		}
+
 		buffer = buffer1;
 		if (bytesRead == 3)
 		{
@@ -370,7 +402,7 @@ bool zx::LoadScreenshot(FIL* file, uint8_t buffer1[0x4000])
 	{
 		UINT bytesToRead = remainingBytes < _MIN_SS ? remainingBytes : _MIN_SS;
 		readResult = f_read(file, buffer, bytesToRead, &bytesRead);
-		if (readResult != FR_OK)
+		if (readResult != FR_OK || bytesRead != bytesToRead)
 		{
 			return false;
 		}
@@ -490,7 +522,7 @@ void SaveState(FileHeader* header)
 	// Bit 0  : Bit 7 of the R-register
 	// Bit 1-3: Border color
 	header->Flags1 = (_zxCpu.r & 0x80) >> 7;
-	header->Flags1 |= (*_spectrumScreen->Settings.BorderColor & 0x03) << 1;
+	header->Flags1 |= (*_spectrumScreen->Settings.BorderColor & 0x07) << 1;
 
 	// Bit 0-1: Interrupt mode (0, 1 or 2)
 	header->Flags2 = _zxCpu.im & 0x03;
