@@ -47,7 +47,7 @@ void noScreenshot()
 {
 	MainScreen.Clear();
 	MainScreen.SetAttribute(0x0310); // red on blue
-	MainScreen.PrintAlignCenter(11, "Error while reading selected file");
+	MainScreen.PrintAlignCenter(11, "Error reading selected file");
 	MainScreen.SetAttribute(0x3F10); // white on blue
 }
 
