@@ -101,15 +101,81 @@ void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
 void ReadState(FileHeader* header);
 void SaveState(FileHeader* header);
 
-bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
+bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4000])
 {
 	// Note: this requires little-endian processor
 	FileHeader* header = (FileHeader*) buffer1;
 	SaveState(header);
 
-	//memset(&buffer1[sizeof(FileHeader)], 0, header->AdditionalBlockLength);
+	memset(&buffer1[sizeof(FileHeader)], 0, header->AdditionalBlockLength - 2);
 
-	return false;
+	FRESULT writeResult;
+	UINT bytesWritten;
+	writeResult = f_write(file, buffer1, sizeof(FileHeader) + header->AdditionalBlockLength - 2, &bytesWritten);
+
+	uint8_t pages[] = { 8, 4, 5 };
+
+	for (int i = 0; i < 3; i++)
+	{
+		uint8_t pageNumber = pages[i];
+		uint16_t pageSize = 0x4000;
+
+		uint8_t* buffer = (uint8_t*)buffer1;
+		if (pageSize == 0x4000)
+		{
+			*buffer = 0xFF;
+			buffer++;
+			*buffer = 0xFF;
+		}
+		else
+		{
+			*buffer = pageSize;
+			buffer++;
+			*buffer = pageSize >> 8;
+		}
+		buffer++;
+		*buffer = pageNumber;
+
+		writeResult = f_write(file, buffer1, 3, &bytesWritten);
+
+		switch (pageNumber)
+		{
+		case 8:
+			buffer = buffer2;
+
+			// 0x4000..0x5AFF
+			memcpy(buffer, _spectrumScreen->Settings.Pixels, _spectrumScreen->_pixelCount);
+			for (uint32_t i = 0; i < _spectrumScreen->_attributeCount; i++)
+			{
+				buffer[_spectrumScreen->_pixelCount + i] = _spectrumScreen->ToSpectrumColor(
+						_spectrumScreen->Settings.Attributes[i]);
+			}
+
+			// 0x5B00..0x7FFF
+			memcpy(&buffer[0x1B00], RamBuffer, 0x2500);
+
+			break;
+		case 4:
+			buffer = &RamBuffer[0x8000 - 0x5B00];
+			break;
+		case 5:
+			buffer = &RamBuffer[0xC000 - 0x5B00];
+			break;
+		}
+
+		int remainingBytesInPage = pageSize;
+		do
+		{
+			UINT bytesToWrite =
+					remainingBytesInPage < _MIN_SS ?
+							remainingBytesInPage : _MIN_SS;
+			writeResult = f_write(file, buffer, bytesToWrite, &bytesWritten);
+			remainingBytesInPage -= bytesWritten;
+			buffer += bytesWritten;
+		} while (writeResult == FR_OK && remainingBytesInPage > 0);
+	}
+
+	return true;
 }
 
 bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
