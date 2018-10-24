@@ -184,6 +184,11 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 
 			remainingBytesInPage -= bytesWritten;
 			buffer += bytesWritten;
+
+			while(BSP_SD_GetCardState() == SD_TRANSFER_BUSY)
+			{
+				HAL_Delay(10);
+			}
 		} while (writeResult == FR_OK && remainingBytesInPage > 0);
 	}
 
