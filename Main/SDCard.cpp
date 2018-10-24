@@ -125,18 +125,24 @@ void loadSnapshot(const TCHAR* fileName)
 	}
 }
 
-void saveSnapshot(const TCHAR* fileName)
+bool saveSnapshot(const TCHAR* fileName)
 {
+	bool result = false;
 	FRESULT fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
 	if (fr == FR_OK)
 	{
 		FIL file;
 		fr = f_open(&file, fileName, FA_WRITE | FA_CREATE_NEW | FA_OPEN_EXISTING);
-		SaveZ80Snapshot(&file, _buffer16K_1, _buffer16K_2);
-		f_close(&file);
+		if (fr == FR_OK || fr == FR_EXIST)
+		{
+			result = SaveZ80Snapshot(&file, _buffer16K_1, _buffer16K_2);
+			f_close(&file);
+		}
 
 		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
 	}
+
+	return result;
 }
 
 static int fileCompare(const void* a, const void* b)
@@ -207,10 +213,19 @@ bool saveSnapshotLoop()
 	case KEY_ENTER:
 	case KEY_KP_ENTER:
 		strcat(_snapshotName,".z80");
-		saveSnapshot(_snapshotName);
-		_savingSnapshot = false;
-		restoreState(false);
-		return false;
+		if (saveSnapshot(_snapshotName))
+		{
+			_savingSnapshot = false;
+			restoreState(false);
+			return false;
+		}
+		else
+		{
+			DebugScreen.SetAttribute(0x0310); // red on blue
+			DebugScreen.PrintAt(0, 5, "Error saving file");
+			DebugScreen.SetAttribute(0x3F10); // white on blue
+		}
+		break;
 
 	case KEY_ESC:
 		_savingSnapshot = false;
