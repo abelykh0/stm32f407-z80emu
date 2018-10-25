@@ -175,7 +175,7 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 		int remainingBytesInPage = pageSize;
 		do
 		{
-			bytesToWrite = remainingBytesInPage < _MIN_SS ? remainingBytesInPage : _MIN_SS;
+			bytesToWrite = remainingBytesInPage < FF_MIN_SS ? remainingBytesInPage : FF_MIN_SS;
 			writeResult = f_write(file, buffer, bytesToWrite, &bytesWritten);
 			if (writeResult != FR_OK || bytesWritten != bytesToWrite)
 			{
@@ -257,7 +257,7 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 		int remainingBytesInPage = pageSize;
 		do
 		{
-			bytesToRead = remainingBytesInPage < _MIN_SS ? remainingBytesInPage : _MIN_SS;
+			bytesToRead = remainingBytesInPage < FF_MIN_SS ? remainingBytesInPage : FF_MIN_SS;
 			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
 			if (readResult != FR_OK || bytesRead != bytesToRead)
 			{
@@ -347,8 +347,8 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 		do
 		{
 			UINT bytesToRead =
-					remainingBytesInPage < _MIN_SS ?
-							remainingBytesInPage : _MIN_SS;
+					remainingBytesInPage < FF_MIN_SS ?
+							remainingBytesInPage : FF_MIN_SS;
 			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
 			if (readResult != FR_OK || bytesRead != bytesToRead)
 			{
@@ -405,7 +405,7 @@ bool zx::LoadScreenshot(FIL* file, uint8_t buffer1[0x4000])
 
 	do
 	{
-		UINT bytesToRead = remainingBytes < _MIN_SS ? remainingBytes : _MIN_SS;
+		UINT bytesToRead = remainingBytes < FF_MIN_SS ? remainingBytes : FF_MIN_SS;
 		readResult = f_read(file, buffer, bytesToRead, &bytesRead);
 		if (readResult != FR_OK || bytesRead != bytesToRead)
 		{

@@ -1,6 +1,8 @@
 #include <string.h>
 #include <ctype.h>
+#include <stdlib.h>
 
+#include "ffconf.h"
 #include "SDCard.h"
 #include "Emulator.h"
 #include "Keyboard/ps2Keyboard.h"
@@ -14,7 +16,7 @@ uint8_t _fileColumnWidth = DEBUG_COLUMNS / FILE_COLUMNS;
 int16_t _selectedFile = 0;
 int16_t _fileCount;
 
-typedef TCHAR FileName[_MAX_LFN + 1];
+typedef TCHAR FileName[FF_MAX_LFN + 1];
 FileName* _fileNames = (FileName*) _buffer16K_2;
 
 bool _loadingSnapshot = false;
@@ -77,7 +79,7 @@ void SetSelection(uint8_t selectedFile)
 
 		// Try to open file with the same name and .SCR extension
 		TCHAR* scrFileName = (TCHAR*) _buffer16K_1;
-		strncpy(scrFileName, fileName, _MAX_LFN + 1);
+		strncpy(scrFileName, fileName, FF_MAX_LFN + 1);
 		TCHAR* extension = strrchr(scrFileName, '.');
 		if (extension != nullptr)
 		{
@@ -148,16 +150,16 @@ bool saveSnapshot(const TCHAR* fileName)
 static int fileCompare(const void* a, const void* b)
 {
 	TCHAR* file1 = (TCHAR*)_buffer16K_1;
-	for (int i = 0; i <= _MAX_LFN; i++){
+	for (int i = 0; i <= FF_MAX_LFN; i++){
 		file1[i] = tolower(((TCHAR*)a)[i]);
 	}
 
-	TCHAR* file2 = (TCHAR*)&_buffer16K_1[_MAX_LFN + 2];
-	for (int i = 0; i <= _MAX_LFN; i++){
+	TCHAR* file2 = (TCHAR*)&_buffer16K_1[FF_MAX_LFN + 2];
+	for (int i = 0; i <= FF_MAX_LFN; i++){
 		file2[i] = tolower(((TCHAR*)b)[i]);
 	}
 
-	return strncmp(file1, file2, _MAX_LFN + 1);
+	return strncmp(file1, file2, FF_MAX_LFN + 1);
 }
 
 bool saveSnapshotSetup()
@@ -179,7 +181,7 @@ bool saveSnapshotSetup()
 	DebugScreen.PrintAt(0, 2, "Enter file name:");
 	DebugScreen.SetCursorPosition(0, 3);
 	DebugScreen.ShowCursor();
-	memset(_snapshotName, 0, _MAX_LFN + 1);
+	memset(_snapshotName, 0, FF_MAX_LFN + 1);
 	_savingSnapshot = true;
 
 	return true;
@@ -281,7 +283,7 @@ bool loadSnapshotSetup()
 		for (int fileIndex = 0; fileIndex < maxFileCount && fileInfo.fname[0];
 				fileIndex++)
 		{
-			strncpy(_fileNames[fileIndex], fileInfo.fname, _MAX_LFN + 1);
+			strncpy(_fileNames[fileIndex], fileInfo.fname, FF_MAX_LFN + 1);
 			_fileCount++;
 
 			fr = f_findnext(&folder, &fileInfo);
@@ -300,7 +302,7 @@ bool loadSnapshotSetup()
 	// Sort files alphabetically
 	if (_fileCount > 0)
 	{
-		qsort(_fileNames, _fileCount, _MAX_LFN + 1, fileCompare);
+		qsort(_fileNames, _fileCount, FF_MAX_LFN + 1, fileCompare);
 	}
 
 	for (int y = 1; y < DEBUG_ROWS; y++)
