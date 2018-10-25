@@ -22,7 +22,7 @@
  * the BSP_SD_Init() call in the SD_Initialize() and add a call to 
  * BSP_SD_Init() elsewhere in the application.
  */
-/* #define DISABLE_SD_INIT */
+#define DISABLE_SD_INIT
 
 /* Private variables ---------------------------------------------------------*/
 /* Disk status */
