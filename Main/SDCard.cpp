@@ -134,8 +134,17 @@ bool saveSnapshot(const TCHAR* fileName)
 	if (fr == FR_OK)
 	{
 		FIL file;
-		fr = f_open(&file, fileName, FA_WRITE | FA_CREATE_NEW | FA_OPEN_EXISTING);
-		if (fr == FR_OK || fr == FR_EXIST)
+		fr = f_open(&file, fileName, FA_WRITE | FA_CREATE_NEW);
+		if (fr == FR_EXIST)
+		{
+			fr = f_unlink(fileName);
+			if (fr == FR_OK)
+			{
+				fr = f_open(&file, fileName, FA_WRITE | FA_CREATE_NEW);
+			}
+		}
+
+		if (fr == FR_OK)
 		{
 			result = SaveZ80Snapshot(&file, _buffer16K_1, _buffer16K_2);
 			f_close(&file);

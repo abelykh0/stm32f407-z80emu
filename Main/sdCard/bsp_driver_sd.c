@@ -93,7 +93,20 @@ uint8_t BSP_SD_WriteBlocks(uint32_t *pData, uint32_t WriteAddr,
 	if (HAL_SD_WriteBlocks(&hsd, (uint8_t *) pData, WriteAddr, NumOfBlocks,
 			Timeout) != HAL_OK)
 	{
-		sd_state = MSD_ERROR;
+		// Retry 3 times
+		uint8_t attempts = 3;
+		while (HAL_SD_WriteBlocks(&hsd, (uint8_t *) pData, WriteAddr,
+				NumOfBlocks, Timeout) != HAL_OK)
+		{
+			BSP_SD_Init();
+
+			attempts--;
+			if (attempts == 0)
+			{
+				sd_state = MSD_ERROR;
+				break;
+			}
+		}
 	}
 
 	return sd_state;
