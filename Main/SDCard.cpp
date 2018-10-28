@@ -210,6 +210,7 @@ bool saveSnapshotLoop()
 	}
 
 	scanCode = ((scanCode & 0xFF0000) >> 8 | (scanCode & 0xFF));
+	uint8_t x = DebugScreen._cursor_x;
 	switch (scanCode)
 	{
 	case KEY_BACKSPACE:
@@ -223,6 +224,8 @@ bool saveSnapshotLoop()
 
 	case KEY_ENTER:
 	case KEY_KP_ENTER:
+		DebugScreen.HideCursor();
+		DebugScreen.PrintAt(0, 5, "Saving...");
 		strcat(_snapshotName,".z80");
 		if (saveSnapshot(_snapshotName))
 		{
@@ -235,6 +238,8 @@ bool saveSnapshotLoop()
 			DebugScreen.SetAttribute(0x0310); // red on blue
 			DebugScreen.PrintAt(0, 5, "Error saving file");
 			DebugScreen.SetAttribute(0x3F10); // white on blue
+			DebugScreen.SetCursorPosition(x, 3);
+			DebugScreen.ShowCursor();
 		}
 		break;
 
