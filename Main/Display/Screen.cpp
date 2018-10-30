@@ -145,6 +145,10 @@ Rasterizer::RasterInfo Screen::rasterize(
     uint8_t borderColor = *this->Settings.BorderColor;
 
     unsigned scaledLine = (line_number - this->_startLine) / this->Settings.Scale;
+    if (scaledLine == 0)
+    {
+    	this->_frames++;
+    }
 
     if (scaledLine < this->_verticalBorder
     	|| scaledLine >= (unsigned)(this->_vResolution - this->_verticalBorder))
