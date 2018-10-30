@@ -13,7 +13,6 @@ namespace Display
 class Screen: public Rasterizer
 {
 private:
-    void Draw4(uint8_t *bitmap, uint16_t *colors, uint8_t *dest);
     void PrintChar(char c, uint16_t color);
     void PrintCharAt(uint8_t x, uint8_t y, unsigned char c, uint16_t color);
     void DrawChar(const uint8_t *f, uint16_t x, uint16_t y, uint8_t c);

@@ -1,6 +1,7 @@
 #include <Display/Screen.h>
 #include <string.h>
 #include "m4vgalib/vga.h"
+#include "draw4.h"
 
 namespace Display
 {
@@ -162,7 +163,7 @@ Rasterizer::RasterInfo Screen::rasterize(
 
         for (int i = 0; i < ((this->_hResolutionNoBorder + 16) / 32); i++)
         {
-            this->Draw4(bitmap, colors, dest);
+            Draw4(bitmap, colors, dest);
             bitmap += 4; // characters
             colors += 4; // attributes
             dest += 32;  // pixels
@@ -321,71 +322,6 @@ void Screen::InvertColor()
     uint16_t originalColor = this->Settings.Attributes[this->_cursor_y * this->Settings.TextColumns + this->_cursor_x];
     uint16_t newColor = __builtin_bswap16(originalColor);
     this->Settings.Attributes[this->_cursor_y * this->Settings.TextColumns + this->_cursor_x] = newColor;
-}
-
-void Screen::Draw4(uint8_t *bitmap, uint16_t *colors, uint8_t *dest)
-{
-	__asm__ volatile(
-			"  ldr r1, [%[pix]], #4 \n\t" // pixels for characters 0..3
-			"  ldr r3, [%[col]], #4 \n\t"// colors for characters 0..1
-
-			// character #0
-			"  ror r1, r1, #4    \n\t"// pixels >> 4
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".rept 7 \n\t"
-			"  ror r1, r1, #31   \n\t"// pixels << 1
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".endr   \n\t"
-
-			// character #1
-			"  ror r3, r3, #16   \n\t"// colors
-			"  ror r1, r1, #15   \n\t"// pixels >> 15
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".rept 7 \n\t"
-			"  ror r1, r1, #31   \n\t"// pixels << 1
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".endr   \n\t"
-
-			"  ldr r3, [%[col]], #4 \n\t"// colors for for characters 2..3
-
-			// character #2
-			"  ror r1, r1, #15   \n\t"// pixels >> 15
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".rept 7 \n\t"
-			"  ror r1, r1, #31   \n\t"// pixels << 1
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".endr   \n\t"
-
-			// character #3
-			"  ror r3, r3, #16   \n\t"// colors
-			"  ror r1, r1, #15   \n\t"// pixels >> 15
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".rept 7 \n\t"
-			"  ror r1, r1, #31   \n\t"// pixels << 1
-			"  and r0, r1, #8    \n\t"
-			"  lsr r0, r3, r0    \n\t"
-			"  strb r0, [%[odr]], #1 \n\t"
-			".endr   \n\t"
-
-			:
-			: [pix] "r"(bitmap),
-			[col] "r"(colors),
-			[odr] "r"(dest)
-			: "r0", "r1", "r2", "r3");
 }
 
 }
