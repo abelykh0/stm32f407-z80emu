@@ -196,6 +196,18 @@ extern "C" uint8_t input(uint8_t portLow, uint8_t portHigh)
         case 0xBF:
         case 0x7F:
             return indata[portHigh - 0x7F];
+        case 0x00:
+			{
+				uint8_t result = indata[0xFE - 0x7F];
+				result &= indata[0xFD - 0x7F];
+				result &= indata[0xFB - 0x7F];
+				result &= indata[0xF7 - 0x7F];
+				result &= indata[0xEF - 0x7F];
+				result &= indata[0xDF - 0x7F];
+				result &= indata[0xBF - 0x7F];
+				result &= indata[0x7F - 0x7F];
+				return result;
+			}
         }
     }
 

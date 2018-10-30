@@ -54,5 +54,4 @@ This project uses 2 great libraries (in addition to HAL drivers from STMicroelec
 * Save snapshot to SD Card (compressed)
 * The speed is faster than it is supposed to be
 * Sound (will probably require correct speed to work)
-* Some games don't work (not sure if it is an issue with the emulator or my code)
 
