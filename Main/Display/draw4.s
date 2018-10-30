@@ -17,9 +17,11 @@ Draw4:
 
 	  push	{r4, r5}
 
-	  ldr r5, [pix], #4
-	  ldr r3, [col], #4
-	  ror r5, r5, #4
+	  ldr r5, [pix], #4 // pixels for characters 0..3
+	  ldr r3, [col], #4 // colors for characters 0..1
+
+	// character #0
+	  ror r5, r5, #4 // pixels >> 4
 	  and r4, r5, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
@@ -29,7 +31,9 @@ Draw4:
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
-	  ror r3, r3, #16
+
+	// character #1
+	  ror r3, r3, #16 // colors
 	  ror r5, r5, #15
 	  and r4, r5, #8
 	  lsr r4, r3, r4
@@ -40,7 +44,10 @@ Draw4:
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
-	  ldr r3, [col], #4
+
+	  ldr r3, [col], #4 // colors for for characters 2..3
+
+	// character #2
 	  ror r5, r5, #15
 	  and r4, r5, #8
 	  lsr r4, r3, r4
@@ -51,7 +58,9 @@ Draw4:
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
-	  ror r3, r3, #16
+
+	// character #3
+	  ror r3, r3, #16 // colors
 	  ror r5, r5, #15
 	  and r4, r5, #8
 	  lsr r4, r3, r4
