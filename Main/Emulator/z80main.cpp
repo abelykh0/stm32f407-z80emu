@@ -106,11 +106,11 @@ int32_t zx_loop()
         Z80Interrupt(&_zxCpu, 0xff, &_zxContext);
 
         // delay
-        while (HAL_GetTick() < _ticks + 19)
+        while (_spectrumScreen->_frames < _ticks)
         {
         }
 
-		_ticks = HAL_GetTick();
+		_ticks = _spectrumScreen->_frames + 1;
     }
 
     return result;

@@ -42,7 +42,7 @@ public:
     uint8_t _cursor_y = 0;
     uint16_t _pixelCount;
     uint16_t _attributeCount;
-    uint32_t _frames;
+    volatile uint32_t _frames = 0;
 
     VideoSettings Settings;
     Screen(VideoSettings settings);
