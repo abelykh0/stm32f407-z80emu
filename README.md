@@ -46,8 +46,9 @@ How to connect wires:
 | G | Ground | | VGA Ground (5,6,7,8,10)
 
 ## Third party software
-This project uses 2 great libraries (in addition to HAL drivers from STMicroelectronics):
+This project uses several libraries (in addition to HAL drivers from STMicroelectronics):
 * To display video using VGA: https://github.com/cbiffle/m4vgalib (which requires https://github.com/cbiffle/etl)
+* FATFS for SD card: http://elm-chan.org/fsw/ff/00index_e.html
 * Z80 emulator: https://github.com/anotherlin/z80emu
 
 ## Plans for the future / issues
