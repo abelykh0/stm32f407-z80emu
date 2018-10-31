@@ -56,7 +56,12 @@ vga::Band _band {
 };
 
 bool _showingKeyboard;
+bool _settingDateTime;
+uint32_t _frames;
+char* _newDateTime = (char*)_buffer16K_2;
+
 extern Z80_STATE _zxCpu;
+extern RTC_HandleTypeDef hrtc;
 
 void initializeVideo()
 {
@@ -132,8 +137,133 @@ void showHelp()
 	DebugScreen.PrintAt(0, 1, "F2  - save snapshot to SD card");
 	DebugScreen.PrintAt(0, 2, "F3  - load snapshot from SD card");
 	DebugScreen.PrintAt(0, 3, "F5  - reset");
-	DebugScreen.PrintAt(0, 4, "F10 - show keyboard layout");
-	DebugScreen.PrintAt(0, 5, "F12 - show registers");
+	DebugScreen.PrintAt(0, 4, "F6  - set date and time");
+	DebugScreen.PrintAt(0, 5, "F10 - show keyboard layout");
+	DebugScreen.PrintAt(0, 6, "F12 - show registers");
+}
+
+void setDateTimeSetup()
+{
+	_settingDateTime = true;
+
+	DebugScreen.SetAttribute(0x3F10); // white on blue
+	DebugScreen.Clear();
+	showTitle("Set Date and Time. ENTER, ESC, BS");
+
+	RTC_TimeTypeDef time;
+	RTC_DateTypeDef date;
+	HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+	HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+	char* formattedDateTime = (char*)_buffer16K_1;
+	sprintf(formattedDateTime, "%04d-%02d-%02d %02d:%02d:%02d",
+			date.Year + 2000, date.Month, date.Date,
+			time.Hours, time.Minutes, time.Seconds);
+	DebugScreen.PrintAlignCenter(2, formattedDateTime);
+
+	_frames = DebugScreen._frames + 5;
+
+	DebugScreen.PrintAt(0, 4, "Enter new date and time (yyyy-mm-dd hh:mm:ss):");
+	DebugScreen.SetCursorPosition(0, 5);
+	DebugScreen.ShowCursor();
+	memset(_newDateTime, 0, 20);
+}
+
+bool setDateTimeLoop()
+{
+	if (!_settingDateTime)
+	{
+		return false;
+	}
+
+	RTC_TimeTypeDef time;
+	RTC_DateTypeDef date;
+	uint8_t x = DebugScreen._cursor_x;
+
+	if (DebugScreen._frames > _frames)
+	{
+		HAL_RTC_GetTime(&hrtc, &time, RTC_FORMAT_BIN);
+		HAL_RTC_GetDate(&hrtc, &date, RTC_FORMAT_BIN);
+		char* formattedDateTime = (char*)_buffer16K_1;
+		sprintf(formattedDateTime, "%04d-%02d-%02d %02d:%02d:%02d",
+				date.Year + 2000, date.Month, date.Date,
+				time.Hours, time.Minutes, time.Seconds);
+		DebugScreen.PrintAlignCenter(2, formattedDateTime);
+		DebugScreen.SetCursorPosition(x, 5);
+		DebugScreen.ShowCursor();
+		_frames = DebugScreen._frames + 5;
+	}
+
+	int32_t scanCode = Ps2_GetScancode();
+	if (scanCode == 0 || (scanCode & 0xFF00) == 0xF000)
+	{
+		return true;
+	}
+
+	int year, month, day;
+	int hour, minute, second;
+
+	scanCode = ((scanCode & 0xFF0000) >> 8 | (scanCode & 0xFF));
+	switch (scanCode)
+	{
+	case KEY_BACKSPACE:
+		if (DebugScreen._cursor_x > 0)
+		{
+			DebugScreen.PrintAt(DebugScreen._cursor_x - 1, DebugScreen._cursor_y, " ");
+			DebugScreen.SetCursorPosition(DebugScreen._cursor_x - 1, DebugScreen._cursor_y);
+			_newDateTime[DebugScreen._cursor_x] = '\0';
+		}
+		break;
+
+	case KEY_ENTER:
+	case KEY_KP_ENTER:
+		DebugScreen.HideCursor();
+		if (sscanf(_newDateTime, "%04d-%02d-%02d %02d:%02d:%02d",
+				&year, &month, &day,
+				&hour, &minute, &second) == 6)
+		{
+			time.Hours = hour;
+			time.Minutes = minute;
+			time.Seconds = second;
+			HAL_RTC_SetTime(&hrtc, &time, RTC_FORMAT_BIN);
+
+			date.Year = year - 2000;
+			date.Month = month;
+			date.Date = day;
+			HAL_RTC_SetDate(&hrtc, &date, RTC_FORMAT_BIN);
+
+			_settingDateTime = false;
+			restoreState(false);
+			return false;
+		}
+		else
+		{
+			DebugScreen.SetAttribute(0x0310); // red on blue
+			DebugScreen.PrintAt(0, 7, "Invalid date and time");
+			DebugScreen.SetAttribute(0x3F10); // white on blue
+			DebugScreen.SetCursorPosition(x, 5);
+			DebugScreen.ShowCursor();
+		}
+		break;
+
+	case KEY_ESC:
+		_settingDateTime = false;
+		restoreState(false);
+		return false;
+
+	default:
+		char character = Ps2_ConvertScancode(scanCode);
+		if (DebugScreen._cursor_x < 20 && character != '\0')
+		{
+			char* text = (char*)_buffer16K_1;
+			text[0] = character;
+			_newDateTime[DebugScreen._cursor_x] = character;
+			text[1] = '\0';
+			DebugScreen.Print(text);
+		}
+		break;
+	}
+
+	return true;
 }
 
 void saveState()

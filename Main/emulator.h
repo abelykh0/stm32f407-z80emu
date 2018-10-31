@@ -25,6 +25,9 @@ extern uint8_t _buffer16K_2[0x4000];
 void showKeyboardSetup();
 bool showKeyboardLoop();
 
+void setDateTimeSetup();
+bool setDateTimeLoop();
+
 void showHelp();
 
 void initializeVideo();

@@ -42,6 +42,11 @@ extern "C" void loop()
 		return;
 	}
 
+	if (setDateTimeLoop())
+	{
+		return;
+	}
+
 	int32_t result = zx_loop();
 	switch (result)
 	{
@@ -66,6 +71,10 @@ extern "C" void loop()
 	case KEY_F5:
 		zx_reset();
 		showHelp();
+		break;
+
+	case KEY_F6:
+		setDateTimeSetup();
 		break;
 
 	case KEY_F10:
