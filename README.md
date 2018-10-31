@@ -52,7 +52,7 @@ This project uses 2 great libraries (in addition to HAL drivers from STMicroelec
 
 ## Plans for the future / issues
 * Save snapshot to SD Card (compressed)
-* There's a slight flickering in some games because of the way I introduce delay
+* There's a slight flickering in some games
 * The speed is faster than it is supposed to be
 * Sound (will probably require correct speed to work)
 * It fails if there's no SD card inserted
