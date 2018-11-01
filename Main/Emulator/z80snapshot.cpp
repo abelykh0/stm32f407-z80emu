@@ -98,13 +98,14 @@ struct FileHeader
 
 void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
 		uint16_t maxSize, uint8_t* destMemory);
+uint16_t CompressPage(uint8_t* page, uint8_t* destMemory);
 void ReadState(FileHeader* header);
 void SaveState(FileHeader* header);
 
 bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4000])
 {
 	// Note: this requires little-endian processor
-	FileHeader* header = (FileHeader*) buffer1;
+	FileHeader* header = (FileHeader*)buffer1;
 	SaveState(header);
 
 	memset(&buffer1[sizeof(FileHeader)], 0, header->AdditionalBlockLength - 2);
@@ -118,34 +119,12 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 		return false;
 	}
 
-	uint8_t pages[] = { 8, 4, 5 };
+	uint8_t pages[] = { 4, 5, 8 };
 
 	for (int i = 0; i < 3; i++)
 	{
 		uint8_t pageNumber = pages[i];
-		uint16_t pageSize = 0x4000;
-
-		uint8_t* buffer = (uint8_t*)buffer1;
-		if (pageSize == 0x4000)
-		{
-			*buffer = 0xFF;
-			buffer++;
-			*buffer = 0xFF;
-		}
-		else
-		{
-			*buffer = pageSize;
-			buffer++;
-			*buffer = pageSize >> 8;
-		}
-		buffer++;
-		*buffer = pageNumber;
-
-		writeResult = f_write(file, buffer1, 3, &bytesWritten);
-		if (writeResult != FR_OK || bytesWritten != 3)
-		{
-			return false;
-		}
+		uint8_t* buffer = nullptr;
 
 		switch (pageNumber)
 		{
@@ -172,6 +151,32 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 			break;
 		}
 
+		uint16_t pageSize = CompressPage(buffer, buffer1);
+
+		buffer = (uint8_t*)buffer2;
+		if (pageSize == 0x4000)
+		{
+			*buffer = 0xFF;
+			buffer++;
+			*buffer = 0xFF;
+		}
+		else
+		{
+			*buffer = pageSize & 0xFF;
+			buffer++;
+			*buffer = (pageSize & 0xFF00) >> 8;
+		}
+		buffer++;
+		*buffer = pageNumber;
+
+		writeResult = f_write(file, buffer2, 3, &bytesWritten);
+		if (writeResult != FR_OK || bytesWritten != 3)
+		{
+			return false;
+		}
+
+		buffer = buffer1;
+
 		int remainingBytesInPage = pageSize;
 		do
 		{
@@ -184,11 +189,6 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 
 			remainingBytesInPage -= bytesWritten;
 			buffer += bytesWritten;
-
-			while(BSP_SD_GetCardState() == SD_TRANSFER_BUSY)
-			{
-				HAL_Delay(10);
-			}
 		} while (writeResult == FR_OK && remainingBytesInPage > 0);
 	}
 
@@ -534,30 +534,74 @@ void SaveState(FileHeader* header)
 	header->Flags2 = _zxCpu.im & 0x03;
 }
 
-//uint8_t CountEqualBytes(uint8_t wert, uint32_t adr)
-//{
-//	uint8_t ret_wert = 1;
-//	uint8_t n, test;
-//
-//	// max 255
-//	for (n = 0; n < 254; n++)
-//	{
-//		adr++;
-//		if (adr >= 0xFFFF)
-//		{
-//			break;
-//		}
-//
-//		test = RdZ80(adr);
-//		if (test == wert)
-//		{
-//			ret_wert++;
-//		}
-//		else
-//		{
-//			break;
-//		}
-//	}
-//
-//	return (ret_wert);
-//}
+uint8_t CountEqualBytes(uint8_t* address, uint8_t* maxAddress)
+{
+	int result;
+	uint8_t byteValue = *address;
+
+	for (result = 1; result < 255; result++)
+	{
+		address++;
+		if (byteValue != *address
+			|| address >= maxAddress)
+		{
+			break;
+		}
+	}
+
+	return (uint8_t)result;
+}
+
+uint16_t CompressPage(uint8_t* page, uint8_t* destMemory)
+{
+	uint16_t size = 0;
+	uint8_t* maxAddress = page + 0x4000;
+	bool isPrevoiusSingleED = false;
+
+	for (uint8_t* memory = page; memory < maxAddress; memory++)
+	{
+		uint8_t byteValue = *memory;
+		uint8_t equalBytes;
+
+		if (isPrevoiusSingleED)
+		{
+			// A byte directly following a single 0xED is not taken into a block
+			equalBytes = 1;
+		}
+		else
+		{
+			equalBytes = CountEqualBytes(memory, maxAddress);
+		}
+
+		uint8_t minRepeats;
+		if (byteValue == 0xED)
+		{
+			minRepeats = 2;
+		}
+		else
+		{
+			minRepeats = 5;
+		}
+
+		if (equalBytes >= minRepeats)
+		{
+			*destMemory = 0xED;
+			destMemory++;
+			*destMemory = 0xED;
+			destMemory++;
+			*destMemory = equalBytes;
+			destMemory++;
+
+			memory += equalBytes - 1;
+			size += 3;
+		}
+
+		*destMemory = byteValue;
+		destMemory++;
+		size++;
+
+		isPrevoiusSingleED = (byteValue == 0xED && memory < maxAddress && *(memory + 1) != 0xED);
+	}
+
+	return size;
+}

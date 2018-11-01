@@ -114,6 +114,7 @@ uint8_t BSP_SD_WriteBlocks(uint32_t *pData, uint32_t WriteAddr,
 			BSP_SD_Init();
 
 			attempts--;
+			HAL_Delay(6);
 			if (attempts == 0)
 			{
 				sd_state = MSD_ERROR;

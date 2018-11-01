@@ -6,7 +6,7 @@ Spectrum ZX 48K emulator (using STM32F407 microcontroller)
 ## What it can do
 * Emulate Spectrum ZX 48K
 * Load snapshot in .Z80 format from SD card
-* Save snapshot in .Z80 format to SD card (currently uncompressed)
+* Save snapshot in .Z80 format to SD card
 
 TODO: video
 
@@ -52,7 +52,6 @@ This project uses several libraries (in addition to HAL drivers from STMicroelec
 * Z80 emulator: https://github.com/anotherlin/z80emu
 
 ## Plans for the future / issues
-* Save snapshot to SD Card (compressed)
 * There's a slight flickering in some games
 * The speed is faster than it is supposed to be
 * Sound (will probably require correct speed to work)
