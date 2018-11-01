@@ -221,11 +221,15 @@ bool setDateTimeLoop()
 				&year, &month, &day,
 				&hour, &minute, &second) == 6)
 		{
+			HAL_RTC_Init(&hrtc);
+
+			memset(&time, 0, sizeof(time));
 			time.Hours = hour;
 			time.Minutes = minute;
 			time.Seconds = second;
 			HAL_RTC_SetTime(&hrtc, &time, RTC_FORMAT_BIN);
 
+			memset(&date, 0, sizeof(date));
 			date.Year = year - 2000;
 			date.Month = month;
 			date.Date = day;
