@@ -56,5 +56,5 @@ This project uses several libraries (in addition to HAL drivers from STMicroelec
 * There's a slight flickering in some games
 * The speed is faster than it is supposed to be
 * Sound (will probably require correct speed to work)
-* It fails if there's no SD card inserted
+
 
