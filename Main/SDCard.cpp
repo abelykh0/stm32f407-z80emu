@@ -225,7 +225,7 @@ bool saveSnapshotLoop()
 	case KEY_ENTER:
 	case KEY_KP_ENTER:
 		DebugScreen.HideCursor();
-		DebugScreen.PrintAt(0, 5, "Saving...");
+		DebugScreen.PrintAt(0, 5, "Saving...                  ");
 		strcat(_snapshotName,".z80");
 		if (saveSnapshot(_snapshotName))
 		{
