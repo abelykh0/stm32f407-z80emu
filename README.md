@@ -8,7 +8,11 @@ Spectrum ZX 48K emulator (using STM32F407 microcontroller)
 * Load snapshot in .Z80 format from SD card
 * Save snapshot in .Z80 format to SD card
 
-TODO: video
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=PQxoNzHJnkY
+" target="_blank"><img src="http://img.youtube.com/vi/PQxoNzHJnkY/0.jpg" 
+alt="ZX Spectrum Emulator on STM32F407" width="480" height="360" border="10" /></a>
+
+Video
 
 ## Installation
 If you want to try my project, this is the only part that you need.
