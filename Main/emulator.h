@@ -29,6 +29,9 @@ void setDateTimeSetup();
 bool setDateTimeLoop();
 
 void showHelp();
+void clearHelp();
+void toggleHelp();
+void restoreHelp();
 
 void initializeVideo();
 void startVideo();

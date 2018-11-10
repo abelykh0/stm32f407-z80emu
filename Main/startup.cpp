@@ -50,8 +50,12 @@ extern "C" void loop()
 	int32_t result = zx_loop();
 	switch (result)
 	{
+	case KEY_ESC:
+		clearHelp();
+		break;
+
 	case KEY_F1:
-		showHelp();
+		toggleHelp();
 		break;
 
 	case KEY_F2:

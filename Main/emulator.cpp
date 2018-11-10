@@ -59,6 +59,7 @@ bool _showingKeyboard;
 bool _settingDateTime;
 uint32_t _frames;
 char* _newDateTime = (char*)_buffer16K_2;
+bool _helpShown;
 
 extern Z80_STATE _zxCpu;
 extern RTC_HandleTypeDef hrtc;
@@ -127,19 +128,54 @@ bool showKeyboardLoop()
 	return false;
 }
 
+void toggleHelp()
+{
+	if (_helpShown)
+	{
+		clearHelp();
+	}
+	else
+	{
+		showHelp();
+	}
+}
+
+void clearHelp()
+{
+	DebugScreen.HideCursor();
+	DebugScreen.SetAttribute(0x3F10); // white on blue
+	DebugScreen.Clear();
+
+	_helpShown = false;
+}
+
 void showHelp()
 {
 	DebugScreen.HideCursor();
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
 
-	DebugScreen.PrintAt(0, 0, "F1  - show this screen");
+	DebugScreen.PrintAt(0, 0, "F1  - show / hide help");
 	DebugScreen.PrintAt(0, 1, "F2  - save snapshot to SD card");
 	DebugScreen.PrintAt(0, 2, "F3  - load snapshot from SD card");
 	DebugScreen.PrintAt(0, 3, "F5  - reset");
 	DebugScreen.PrintAt(0, 4, "F6  - set date and time");
 	DebugScreen.PrintAt(0, 5, "F10 - show keyboard layout");
 	DebugScreen.PrintAt(0, 6, "F12 - show registers");
+
+	_helpShown = true;
+}
+
+void restoreHelp()
+{
+	if (_helpShown)
+	{
+		showHelp();
+	}
+	else
+	{
+		clearHelp();
+	}
 }
 
 void setDateTimeSetup()
@@ -282,14 +318,14 @@ void restoreState(bool restoreScreen)
 		_spectrumScreenData = *_savedScreenData;
 	}
 
-	showHelp();
+	restoreHelp();
 }
 
 void showRegisters()
 {
 	DebugScreen.SetAttribute(0x3F10); // white on blue
 	DebugScreen.Clear();
-	showTitle("Registers. F1 - show help screen");
+	showTitle("Registers. ESC - clear");
 
     char* buf = (char*)_buffer16K_1;
 
