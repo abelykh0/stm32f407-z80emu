@@ -106,7 +106,7 @@ void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
 uint16_t CompressPage(uint8_t* page, uint8_t* destMemory);
 void ReadState(FileHeader* header);
 void SaveState(FileHeader* header);
-void GetPageInfo(FileHeader* header, uint8_t* buffer, uint8_t* pageNumber, uint16_t* pageSize);
+void GetPageInfo(uint8_t* buffer, bool is128Mode, uint8_t pagingState, uint8_t* pageNumber, uint16_t* pageSize);
 
 bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4000])
 {
@@ -218,6 +218,20 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 	FileHeader* header = (FileHeader*) buffer1;
 	ReadState(header);
 
+	bool is128Mode;
+	if (header->AdditionalBlockLength < 54)
+	{
+		// version 2
+		is128Mode = (header->HardwareMode >= 3);
+	}
+	else
+	{
+		// version 3
+		is128Mode = (header->HardwareMode >= 4);
+	}
+
+	uint8_t pagingState = header->PagingState;
+
 	bytesToRead = header->AdditionalBlockLength - 4 + 3;
 	readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
 	if (readResult != FR_OK || bytesRead != bytesToRead)
@@ -228,7 +242,7 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 	// Get pageSize and pageNumber
 	uint16_t pageSize;
 	uint8_t pageNumber;
-	GetPageInfo(header, &buffer1[bytesToRead - 3], &pageNumber, &pageSize);
+	GetPageInfo(&buffer1[bytesToRead - 3], is128Mode, pagingState, &pageNumber, &pageSize);
 
 	do
 	{
@@ -251,34 +265,47 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 			memory = &RamBuffer[0xC000 - 0x5B00];
 			break;
 		default:
-			continue;
+			memory = nullptr;
+			break;
 		}
 
-		// Read page into tempBuffer
-		uint8_t* buffer = buffer1;
-		int remainingBytesInPage = pageSize;
-		do
+		if (memory != nullptr)
 		{
-			bytesToRead = remainingBytesInPage < FF_MIN_SS ? remainingBytesInPage : FF_MIN_SS;
-			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
-			if (readResult != FR_OK || bytesRead != bytesToRead)
+			// Read page into tempBuffer
+			uint8_t* buffer = buffer1;
+			int remainingBytesInPage = pageSize;
+			do
+			{
+				bytesToRead = remainingBytesInPage < FF_MIN_SS ? remainingBytesInPage : FF_MIN_SS;
+				readResult = f_read(file, buffer, bytesToRead, &bytesRead);
+				if (readResult != FR_OK || bytesRead != bytesToRead)
+				{
+					return false;
+				}
+
+				remainingBytesInPage -= bytesRead;
+				buffer += bytesRead;
+			} while (readResult == FR_OK && remainingBytesInPage > 0);
+
+			DecompressPage(buffer1, pageSize, isCompressed, 0, memory);
+
+			if (pageNumber == 8)
+			{
+				// 0x4000..0x5AFF
+				_spectrumScreen->ShowScreenshot(memory);
+
+				// 0x5B00..0x7FFF
+				memcpy(RamBuffer, &memory[0x1B00], 0x2500);
+			}
+		}
+		else
+		{
+			// Move forward without reading
+			readResult = f_lseek(file, f_tell(file) + pageSize);
+			if (readResult != FR_OK)
 			{
 				return false;
 			}
-
-			remainingBytesInPage -= bytesRead;
-			buffer += bytesRead;
-		} while (readResult == FR_OK && remainingBytesInPage > 0);
-
-		DecompressPage(buffer1, pageSize, isCompressed, 0, memory);
-
-		if (pageNumber == 8)
-		{
-			// 0x4000..0x5AFF
-			_spectrumScreen->ShowScreenshot(memory);
-
-			// 0x5B00..0x7FFF
-			memcpy(RamBuffer, &memory[0x1B00], 0x2500);
 		}
 
 		readResult = f_read(file, buffer1, 3, &bytesRead);
@@ -287,10 +314,9 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 			return false;
 		}
 
-		buffer = buffer1;
 		if (bytesRead == 3)
 		{
-			GetPageInfo(header, buffer, &pageNumber, &pageSize);
+			GetPageInfo(buffer1, is128Mode, pagingState, &pageNumber, &pageSize);
 		}
 		else
 		{
@@ -315,6 +341,20 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 	// Note: this requires little-endian processor
 	FileHeader* header = (FileHeader*) buffer1;
 
+	bool is128Mode;
+	if (header->AdditionalBlockLength < 54)
+	{
+		// version 2
+		is128Mode = (header->HardwareMode >= 3);
+	}
+	else
+	{
+		// version 3
+		is128Mode = (header->HardwareMode >= 4);
+	}
+
+	uint8_t pagingState = header->PagingState;
+
 	UINT bytesToRead = header->AdditionalBlockLength - 4 + 3;
 	readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
 	if (readResult != FR_OK || bytesRead != bytesToRead)
@@ -325,7 +365,7 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 	// Get pageSize and pageNumber
 	uint16_t pageSize;
 	uint8_t pageNumber;
-	GetPageInfo(header, &buffer1[bytesToRead - 3], &pageNumber, &pageSize);
+	GetPageInfo(&buffer1[bytesToRead - 3], is128Mode, pagingState, &pageNumber, &pageSize);
 
 	do
 	{
@@ -335,27 +375,28 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 			pageSize = 0x4000;
 		}
 
-		// Read page into buffer1
-		uint8_t* buffer = buffer1;
-		int remainingBytesInPage = pageSize;
-		do
-		{
-			UINT bytesToRead =
-					remainingBytesInPage < FF_MIN_SS ?
-							remainingBytesInPage : FF_MIN_SS;
-			readResult = f_read(file, buffer, bytesToRead, &bytesRead);
-			if (readResult != FR_OK || bytesRead != bytesToRead)
-			{
-				return false;
-			}
-
-			remainingBytesInPage -= bytesRead;
-			buffer += bytesRead;
-		} while (readResult == FR_OK && remainingBytesInPage > 0);
-
 		if (pageNumber == 8)
 		{
 			// This page contains screenshoot
+
+			// Read page into buffer1
+			uint8_t* buffer = buffer1;
+			int remainingBytesInPage = pageSize;
+			do
+			{
+				UINT bytesToRead =
+						remainingBytesInPage < FF_MIN_SS ?
+								remainingBytesInPage : FF_MIN_SS;
+				readResult = f_read(file, buffer, bytesToRead, &bytesRead);
+				if (readResult != FR_OK || bytesRead != bytesToRead)
+				{
+					return false;
+				}
+
+				remainingBytesInPage -= bytesRead;
+				buffer += bytesRead;
+			} while (readResult == FR_OK && remainingBytesInPage > 0);
+
 			uint8_t* buffer2 = &buffer1[0x2000];
 			if (pageSize > 6912)
 			{
@@ -363,6 +404,16 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 			}
 			DecompressPage(buffer1, pageSize, isCompressed, 6912, buffer2);
 			_spectrumScreen->ShowScreenshot(buffer2);
+			return true;
+		}
+		else
+		{
+			// Move forward without reading
+			readResult = f_lseek(file, f_tell(file) + pageSize);
+			if (readResult != FR_OK)
+			{
+				return false;
+			}
 		}
 
 		readResult = f_read(file, buffer1, 3, &bytesRead);
@@ -371,10 +422,9 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 			return false;
 		}
 
-		buffer = buffer1;
 		if (bytesRead == 3)
 		{
-			GetPageInfo(header, buffer, &pageNumber, &pageSize);
+			GetPageInfo(buffer1, is128Mode, pagingState, &pageNumber, &pageSize);
 		}
 		else
 		{
@@ -526,13 +576,35 @@ void SaveState(FileHeader* header)
 	header->Flags2 = _zxCpu.im & 0x03;
 }
 
-void GetPageInfo(FileHeader* header, uint8_t* buffer, uint8_t* pageNumber, uint16_t* pageSize)
+void GetPageInfo(uint8_t* buffer, bool is128Mode, uint8_t pagingState, uint8_t* pageNumber, uint16_t* pageSize)
 {
-	*pageSize = *buffer;
-	buffer++;
-	*pageSize |= *buffer << 8;
-	buffer++;
-	*pageNumber = *buffer;
+	*pageSize = buffer[0];
+	*pageSize |= buffer[1] << 8;
+	*pageNumber = buffer[2];
+
+	if (is128Mode)
+	{
+		switch (*pageNumber)
+		{
+		case 8:
+			// 0x4000..0x7FFF
+			break;
+		case 4:
+			// 0x8000..0xBFFF
+			break;
+		default:
+			if (*pageNumber == (pagingState & 0x03) + 3)
+			{
+				*pageNumber = 5; // 0xC000..0xFFFF
+			}
+			else
+			{
+				// skip it
+				*pageNumber = 0;
+			}
+			break;
+		}
+	}
 }
 
 uint8_t CountEqualBytes(uint8_t* address, uint8_t* maxAddress)
