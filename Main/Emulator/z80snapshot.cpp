@@ -44,9 +44,12 @@ extern uint8_t RamBuffer[];
                  defined, for version 3 .z80 files)
                  3=Sinclair 2 Right joystick
  30 0x1E 2       Length of additional header block (see below)
+                 23 for version 2
+                 54 or 55 for version 3
  ===========================
  32 0x20 2       Program counter
- 34 0x22 1       0 for ZX Spectrum 48K
+ 34 0x22 1       Hardware mode, 0 for ZX Spectrum 48K
+ 35 0x23 1       If in 128 mode, contains last OUT to 0x7ffd
  ...
 
  Hereafter a number of memory blocks follow, each containing the compressed data of a 16K block.
@@ -94,6 +97,8 @@ struct FileHeader
 	uint8_t Flags2;
 	uint16_t AdditionalBlockLength;
 	uint16_t PC;
+	uint8_t HardwareMode;
+	uint8_t PagingState;
 }__attribute__((packed));
 
 void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
@@ -101,6 +106,7 @@ void DecompressPage(uint8_t *page, uint16_t pageLength, bool isCompressed,
 uint16_t CompressPage(uint8_t* page, uint8_t* destMemory);
 void ReadState(FileHeader* header);
 void SaveState(FileHeader* header);
+void GetPageInfo(FileHeader* header, uint8_t* buffer, uint8_t* pageNumber, uint16_t* pageSize);
 
 bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4000])
 {
@@ -108,11 +114,11 @@ bool zx::SaveZ80Snapshot(FIL* file, uint8_t buffer1[0x4000], uint8_t buffer2[0x4
 	FileHeader* header = (FileHeader*)buffer1;
 	SaveState(header);
 
-	memset(&buffer1[sizeof(FileHeader)], 0, header->AdditionalBlockLength - 2);
+	memset(&buffer1[sizeof(FileHeader)], 0, header->AdditionalBlockLength - 4);
 
 	FRESULT writeResult;
 	UINT bytesWritten;
-	UINT bytesToWrite = sizeof(FileHeader) + header->AdditionalBlockLength - 2;
+	UINT bytesToWrite = sizeof(FileHeader) + header->AdditionalBlockLength - 4;
 	writeResult = f_write(file, buffer1, bytesToWrite, &bytesWritten);
 	if (writeResult != FR_OK || bytesWritten != bytesToWrite)
 	{
@@ -212,21 +218,17 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 	FileHeader* header = (FileHeader*) buffer1;
 	ReadState(header);
 
-	bytesToRead = header->AdditionalBlockLength - 2 + 3;
+	bytesToRead = header->AdditionalBlockLength - 4 + 3;
 	readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
 	if (readResult != FR_OK || bytesRead != bytesToRead)
 	{
 		return false;
 	}
 
-	uint8_t* buffer = &buffer1[bytesToRead - 3];
-
 	// Get pageSize and pageNumber
-	uint16_t pageSize = *buffer;
-	buffer++;
-	pageSize |= *buffer << 8;
-	buffer++;
-	uint8_t pageNumber = *buffer;
+	uint16_t pageSize;
+	uint8_t pageNumber;
+	GetPageInfo(header, &buffer1[bytesToRead - 3], &pageNumber, &pageSize);
 
 	do
 	{
@@ -288,11 +290,7 @@ bool zx::LoadZ80Snapshot(FIL* file, uint8_t buffer1[0x4000],
 		buffer = buffer1;
 		if (bytesRead == 3)
 		{
-			pageSize = *buffer;
-			buffer++;
-			pageSize |= *buffer << 8;
-			buffer++;
-			pageNumber = *buffer;
+			GetPageInfo(header, buffer, &pageNumber, &pageSize);
 		}
 		else
 		{
@@ -317,21 +315,17 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 	// Note: this requires little-endian processor
 	FileHeader* header = (FileHeader*) buffer1;
 
-	UINT bytesToRead = header->AdditionalBlockLength - 2 + 3;
+	UINT bytesToRead = header->AdditionalBlockLength - 4 + 3;
 	readResult = f_read(file, buffer1, bytesToRead, &bytesRead);
 	if (readResult != FR_OK || bytesRead != bytesToRead)
 	{
 		return false;
 	}
 
-	uint8_t* buffer = &buffer1[bytesToRead - 3];
-
 	// Get pageSize and pageNumber
-	uint16_t pageSize = *buffer;
-	buffer++;
-	pageSize |= *buffer << 8;
-	buffer++;
-	uint8_t pageNumber = *buffer;
+	uint16_t pageSize;
+	uint8_t pageNumber;
+	GetPageInfo(header, &buffer1[bytesToRead - 3], &pageNumber, &pageSize);
 
 	do
 	{
@@ -380,11 +374,7 @@ bool zx::LoadScreenFromZ80Snapshot(FIL* file, uint8_t buffer1[0x4000])
 		buffer = buffer1;
 		if (bytesRead == 3)
 		{
-			pageSize = *buffer;
-			buffer++;
-			pageSize |= *buffer << 8;
-			buffer++;
-			pageNumber = *buffer;
+			GetPageInfo(header, buffer, &pageNumber, &pageSize);
 		}
 		else
 		{
@@ -503,6 +493,8 @@ void ReadState(FileHeader* header)
 void SaveState(FileHeader* header)
 {
 	header->Version = 0;
+	header->HardwareMode = 0;
+	header->PagingState = 0;
 	header->AdditionalBlockLength = 54;
 
 	header->A = _zxCpu.registers.byte[Z80_A];
@@ -532,6 +524,15 @@ void SaveState(FileHeader* header)
 
 	// Bit 0-1: Interrupt mode (0, 1 or 2)
 	header->Flags2 = _zxCpu.im & 0x03;
+}
+
+void GetPageInfo(FileHeader* header, uint8_t* buffer, uint8_t* pageNumber, uint16_t* pageSize)
+{
+	*pageSize = *buffer;
+	buffer++;
+	*pageSize |= *buffer << 8;
+	buffer++;
+	*pageNumber = *buffer;
 }
 
 uint8_t CountEqualBytes(uint8_t* address, uint8_t* maxAddress)
