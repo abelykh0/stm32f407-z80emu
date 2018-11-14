@@ -15,32 +15,32 @@ Draw4:
       col   .req r1
       dst   .req r2
 
-	  push	{r4, r5}
+	  push {r4}
 
-	  ldr r5, [pix], #4 // pixels for characters 0..3
+	  ldr r0, [pix]     // pixels for characters 0..3
 	  ldr r3, [col], #4 // colors for characters 0..1
 
 	// character #0
-	  ror r5, r5, #4 // pixels >> 4
-	  and r4, r5, #8
+	  ror r0, r0, #4 // pixels >> 4
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.rept 7
-	  ror r5, r5, #31
-	  and r4, r5, #8
+	  ror r0, r0, #31
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
 
 	// character #1
 	  ror r3, r3, #16 // colors
-	  ror r5, r5, #15
-	  and r4, r5, #8
+	  ror r0, r0, #15
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.rept 7
-	  ror r5, r5, #31
-	  and r4, r5, #8
+	  ror r0, r0, #31
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
@@ -48,29 +48,29 @@ Draw4:
 	  ldr r3, [col], #4 // colors for for characters 2..3
 
 	// character #2
-	  ror r5, r5, #15
-	  and r4, r5, #8
+	  ror r0, r0, #15
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.rept 7
-	  ror r5, r5, #31
-	  and r4, r5, #8
+	  ror r0, r0, #31
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
 
 	// character #3
 	  ror r3, r3, #16 // colors
-	  ror r5, r5, #15
-	  and r4, r5, #8
+	  ror r0, r0, #15
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.rept 7
-	  ror r5, r5, #31
-	  and r4, r5, #8
+	  ror r0, r0, #31
+	  and r4, r0, #8
 	  lsr r4, r3, r4
 	  strb r4, [dst], #1
 	.endr
 
-	pop	{r4, r5}
+	pop	{r4}
     bx lr
