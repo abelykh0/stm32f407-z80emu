@@ -45,9 +45,10 @@ How to connect wires:
 | PE13 | Blue 2  | Resistor 680 Ohm | VGA blue (3)
 | PD15 | HSync   | | VGA HSync (13)
 | PD14 | VSync   | | VGA VSync (14)
+| PB12 | Sound   | | Connect to '+' of passive speaker
 | PB14 | CLK | Resistor 2K2 to keyboard CLK and resistor 3K3 to GND
 | PB13 | DATA | Resistor 2K2 to keyboard DATA and resistor 3K3 to GND
-| G | Ground | | VGA Ground (5,6,7,8,10)
+| G | Ground | | VGA Ground (5,6,7,8,10), '-' of passive speaker 
 
 ## Third party software
 This project uses several libraries (in addition to HAL drivers from STMicroelectronics):
@@ -56,8 +57,5 @@ This project uses several libraries (in addition to HAL drivers from STMicroelec
 * FATFS for SD card: http://elm-chan.org/fsw/ff/00index_e.html
 
 ## Plans for the future / issues
-* There's a slight flickering in some games
-* The speed is faster than it is supposed to be
-* Sound (will probably require correct speed to work)
-
-
+* Flickering in some games
+* The speed is 12% faster than it is supposed to be

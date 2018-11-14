@@ -47,6 +47,13 @@ void zx_setup(SpectrumScreen* spectrumScreen)
 
     memset(indata, 0xFF, 128);
 
+    // Sound
+    GPIO_InitTypeDef GPIO_InitStruct;
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
     Z80Reset(&_zxCpu);
 }
 
@@ -226,6 +233,16 @@ extern "C" void output(uint16_t port, uint8_t data)
         // border color (no bright colors)
         uint8_t borderColor = (data & 0x7);
         *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
+
+        // sound
+        if (data & 0x10)
+        {
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+        }
+        else
+        {
+			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+        }
     }
     break;
     default:
