@@ -7,6 +7,7 @@
 #include "z80input.h"
 #include "Keyboard/ps2Keyboard.h"
 
+//#define SOUND
 #define CYCLES_PER_STEP 69888
 
 #define RAM_AVAILABLE 0xC000
@@ -47,12 +48,14 @@ void zx_setup(SpectrumScreen* spectrumScreen)
 
     memset(indata, 0xFF, 128);
 
+#ifdef SOUND
     // Sound
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_InitStruct.Pin = GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_PULLUP;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+#endif
 
     Z80Reset(&_zxCpu);
 }
@@ -231,18 +234,28 @@ extern "C" void output(uint16_t port, uint8_t data)
     case 0xFE:
     {
         // border color (no bright colors)
-        uint8_t borderColor = (data & 0x7);
-        *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
+        uint8_t borderColor = (data & 0x07);
+    	if ((indata[0x20] & 0x07) != borderColor)
+    	{
+            *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
+    	}
 
-        // sound
-        if (data & 0x10)
-        {
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
-        }
-        else
-        {
-			HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
-        }
+#ifdef SOUND
+        uint8_t sound = (data & 0x10);
+    	if ((indata[0x20] & 0x10) != sound)
+    	{
+			if (sound)
+			{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_SET);
+			}
+			else
+			{
+				HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
+			}
+    	}
+#endif
+
+        indata[0x20] = data;
     }
     break;
     default:
