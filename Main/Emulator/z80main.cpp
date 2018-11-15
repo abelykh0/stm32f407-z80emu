@@ -46,8 +46,6 @@ void zx_setup(SpectrumScreen* spectrumScreen)
     _zxContext.input = input;
     _zxContext.output = output;
 
-    memset(indata, 0xFF, 128);
-
 #ifdef SOUND
     // Sound
     GPIO_InitTypeDef GPIO_InitStruct;
@@ -57,11 +55,13 @@ void zx_setup(SpectrumScreen* spectrumScreen)
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 #endif
 
-    Z80Reset(&_zxCpu);
+    zx_reset();
 }
 
 void zx_reset()
 {
+    memset(indata, 0xFF, 128);
+    *_spectrumScreen->Settings.BorderColor = 0x15;
     Z80Reset(&_zxCpu);
 }
 
