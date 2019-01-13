@@ -6,9 +6,6 @@
 #include "Emulator/z80emu/z80emu.h"
 #include "Emulator/SpectrumScreen.h"
 
-extern Z80_STATE _zxCpu;
-extern uint8_t RamBuffer[];
-
 /*
  Offset  Length  Description
  ---------------------------

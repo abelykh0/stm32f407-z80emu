@@ -9,20 +9,19 @@
 
 //#define SOUND
 #define CYCLES_PER_STEP 69888
-
 #define RAM_AVAILABLE 0xC000
-uint8_t RamBuffer[RAM_AVAILABLE];
 
-Z80_STATE _zxCpu;
-CONTEXT _zxContext;
-uint16_t _attributeCount;
 SpectrumScreen* _spectrumScreen;
+uint8_t RamBuffer[RAM_AVAILABLE];
+Z80_STATE _zxCpu;
 
-int _total;
-int _next_total = 0;
-uint8_t zx_data = 0;
-uint8_t frames = 0;
-uint32_t _ticks = 0;
+static CONTEXT _zxContext;
+static uint16_t _attributeCount;
+static int _total;
+static int _next_total = 0;
+static uint8_t zx_data = 0;
+static uint8_t frames = 0;
+static uint32_t _ticks = 0;
 
 extern "C"
 {

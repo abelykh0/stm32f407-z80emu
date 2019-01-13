@@ -2,8 +2,8 @@
 
 #define QUEUE_SIZE (QUEUE_ELEMENTS + 1)
 
-int Queue[QUEUE_SIZE];
-uint8_t QueueIn, QueueOut;
+static int Queue[QUEUE_SIZE];
+static uint8_t QueueIn, QueueOut;
 
 void QueueInit()
 {

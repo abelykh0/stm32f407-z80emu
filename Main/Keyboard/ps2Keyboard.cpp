@@ -19,14 +19,14 @@ typedef enum
     STOP
 } ps2_read_status;
 
-ps2_read_status ps2_status;
-int32_t kb_data;
+static ps2_read_status ps2_status;
+static int32_t kb_data;
 
-uint8_t lastClk = 1;
-uint8_t lastData;
-bool _isLeftShiftPressed;
-bool _isRightShiftPressed;
-volatile uint8_t _parity;
+static uint8_t lastClk = 1;
+static uint8_t lastData;
+static bool _isLeftShiftPressed;
+static bool _isRightShiftPressed;
+static volatile uint8_t _parity;
 
 void Ps2_Initialize()
 {
