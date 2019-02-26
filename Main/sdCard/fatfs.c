@@ -8,8 +8,12 @@ extern RTC_HandleTypeDef hrtc;
 
 void MX_FATFS_Init(void)
 {
+#ifdef BOARD2
+	retSD = FATFS_LinkDriver(&FlashDriver, SDPath);
+#else
 	/*## FatFS: Link the SD driver ###########################*/
 	retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
+#endif
 }
 
 /**

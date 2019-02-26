@@ -9,6 +9,7 @@ extern "C"
 #include "fatFS/ff.h"
 #include "ff_gen_drv.h"
 #include "sd_diskio.h" /* defines SD_Driver as external */
+#include "flash_diskio.h" /* defines FlashDriver as external */
 
 extern uint8_t retSD; /* Return value for SD */
 extern char SDPath[4]; /* SD logical drive path */
