@@ -1,6 +1,14 @@
 #ifndef _PS2KEYBOARD_H_
 #define _PS2KEYBOARD_H_
 
+#ifdef BOARD2
+#define CLK_PIN  GPIO_PIN_4
+#define DATA_PIN GPIO_PIN_5
+#else
+#define CLK_PIN  GPIO_PIN_14
+#define DATA_PIN GPIO_PIN_13
+#endif
+
 /* Single Byte Key Codes */
 #define KEY_NUM      0x77
 #define KEY_SCROLL   0x7E

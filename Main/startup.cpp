@@ -58,12 +58,14 @@ extern "C" void loop()
 		toggleHelp();
 		break;
 
+#ifndef BOARD2
 	case KEY_F2:
 		if (!saveSnapshotSetup())
 		{
 			showErrorMessage("Cannot initialize SD card");
 		}
 		break;
+#endif
 
 	case KEY_F3:
 		if (!loadSnapshotSetup())
@@ -77,9 +79,11 @@ extern "C" void loop()
 		showHelp();
 		break;
 
+#ifndef BOARD2
 	case KEY_F6:
 		setDateTimeSetup();
 		break;
+#endif
 
 	case KEY_F10:
 		showKeyboardSetup();
