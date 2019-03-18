@@ -44,8 +44,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Main/sdCard}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1621970767" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="BOARD1"/>
 									<listOptionValue builtIn="false" value="__weak=__attribute__((weak))"/>
-									<listOptionValue builtIn="false" value="BOARD2"/>
 									<listOptionValue builtIn="false" value="__packed=__attribute__((__packed__))"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -71,8 +71,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Main/sdCard}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1968426793" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="BOARD1"/>
 									<listOptionValue builtIn="false" value="__weak=__attribute__((weak))"/>
-									<listOptionValue builtIn="false" value="BOARD2"/>
 									<listOptionValue builtIn="false" value="__packed=__attribute__((__packed__))"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -168,8 +168,8 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/Main/sdCard}&quot;"/>
 								</option>
 								<option id="gnu.c.compiler.option.preprocessor.def.symbols.1621970767" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="BOARD1"/>
 									<listOptionValue builtIn="false" value="__weak=__attribute__((weak))"/>
-									<listOptionValue builtIn="false" value="BOARD2"/>
 									<listOptionValue builtIn="false" value="__packed=__attribute__((__packed__))"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
@@ -197,8 +197,8 @@
 								<option id="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other.1684352190" name="Other flags" superClass="fr.ac6.managedbuild.gnu.cpp.compiler.option.misc.other" useByScannerDiscovery="false" value="-fmessage-length=0" valueType="string"/>
 								<option id="gnu.cpp.compiler.option.dialect.std.901298381" name="Language standard" superClass="gnu.cpp.compiler.option.dialect.std" useByScannerDiscovery="true" value="gnu.cpp.compiler.dialect.c++11" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1885398971" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="BOARD1"/>
 									<listOptionValue builtIn="false" value="__weak=__attribute__((weak))"/>
-									<listOptionValue builtIn="false" value="BOARD2"/>
 									<listOptionValue builtIn="false" value="__packed=__attribute__((__packed__))"/>
 									<listOptionValue builtIn="false" value="USE_HAL_DRIVER"/>
 									<listOptionValue builtIn="false" value="STM32F407xx"/>
