@@ -1,7 +1,7 @@
 
 # Alternative pinout and read-only file system on high 512K of 1M flash
 
-## Picture3
+## Pictures
 ![Picture 1](https://raw.githubusercontent.com/abelykh0/stm32f407-z80emu/master/doc/Board2_1.jpg)
 ![Picture 2](https://raw.githubusercontent.com/abelykh0/stm32f407-z80emu/master/doc/Board2_2.jpg)
 
