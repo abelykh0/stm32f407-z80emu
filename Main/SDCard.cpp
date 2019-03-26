@@ -22,6 +22,34 @@ static bool _loadingSnapshot = false;
 static bool _savingSnapshot = false;
 static char* _snapshotName = (char*)&_buffer16K_1[2];
 
+FRESULT mount()
+{
+	FRESULT result = f_mount(&SDFatFS, (const TCHAR*) SDPath, 1);
+	if (result == FR_OK)
+	{
+		// turn on built-in LED
+#ifdef BOARD2
+		HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_RESET);
+#else
+		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+#endif
+	}
+
+	return result;
+}
+
+void unmount()
+{
+	f_mount(&SDFatFS, (TCHAR const*)SDPath, 0);
+
+	// turn off built-in LED
+#ifdef BOARD2
+	HAL_GPIO_WritePin(GPIOE, GPIO_PIN_0, GPIO_PIN_SET);
+#else
+	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+#endif
+}
+
 void GetFileCoord(uint8_t fileIndex, uint8_t* x, uint8_t* y)
 {
 	*x = fileIndex / (DEBUG_ROWS - 1) * (FILE_COLUMNWIDTH + 1);
@@ -68,7 +96,7 @@ void SetSelection(uint8_t selectedFile)
 	FRESULT fr;
 
 	// Show screenshot for the selected file
-	fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
+	fr = mount();
 	if (fr == FR_OK)
 	{
 		FIL file;
@@ -108,13 +136,13 @@ void SetSelection(uint8_t selectedFile)
 			}
 		}
 
-		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+		unmount();
 	}
 }
 
 void loadSnapshot(const TCHAR* fileName)
 {
-	FRESULT fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
+	FRESULT fr = mount();
 	if (fr == FR_OK)
 	{
 		FIL file;
@@ -122,14 +150,14 @@ void loadSnapshot(const TCHAR* fileName)
 		LoadZ80Snapshot(&file, _buffer16K_1, _buffer16K_2);
 		f_close(&file);
 
-		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+		unmount();
 	}
 }
 
 bool saveSnapshot(const TCHAR* fileName)
 {
 	bool result = false;
-	FRESULT fr = f_mount(&SDFatFS, (TCHAR const*) SDPath, 1);
+	FRESULT fr = mount();
 	if (fr == FR_OK)
 	{
 		FIL file;
@@ -149,7 +177,7 @@ bool saveSnapshot(const TCHAR* fileName)
 			f_close(&file);
 		}
 
-		f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+		unmount();
 	}
 
 	return result;
@@ -177,14 +205,14 @@ bool saveSnapshotSetup()
 
 	showTitle("Save snapshot. ENTER, ESC, BS");
 
-	FRESULT fr = f_mount(&SDFatFS, (const TCHAR*) SDPath, 1);
+	FRESULT fr = mount();
 	if (fr != FR_OK)
 	{
 		return false;
 	}
 
 	// Unmount file system
-	f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+	unmount();
 
 	DebugScreen.PrintAt(0, 2, "Enter file name:");
 	DebugScreen.SetCursorPosition(0, 3);
@@ -276,7 +304,7 @@ bool loadSnapshotSetup()
 
 	showTitle("Load snapshot. ENTER, ESC, \x18, \x19, \x1A, \x1B"); // ↑, ↓, →, ←
 
-	FRESULT fr = f_mount(&SDFatFS, (const TCHAR*) SDPath, 1);
+	FRESULT fr = mount();
 	if (fr != FR_OK)
 	{
 		return false;
@@ -334,7 +362,7 @@ bool loadSnapshotSetup()
 	SetSelection(_selectedFile);
 
 	// Unmount file system
-	f_mount(&SDFatFS, (TCHAR const*) SDPath, 0);
+	unmount();
 
 	if (result)
 	{
