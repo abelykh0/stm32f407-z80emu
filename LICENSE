@@ -3,6 +3,7 @@ licences:
 1) STMicroelectronics HAL and LL APIs are licensed under the open-source BSD License
 2) cbiffle/etl is licensed under the BSD 2-Clause "Simplified" License (https://github.com/cbiffle/etl/blob/master/LICENSE)
 3) cbiffle/m4vgalib is licensed under the BSD 2-Clause "Simplified" License (https://github.com/cbiffle/m4vgalib/blob/master/LICENSE)
+4) FATFS - see http://elm-chan.org/fsw/ff/00index_e.html
 
 The rest is licensed under:
 ==============================================================================
