@@ -1,4 +1,5 @@
 /* Includes ------------------------------------------------------------------*/
+#include <string.h>
 #include "ff_gen_drv.h"
 #include "sd_diskio.h"
 
@@ -53,7 +54,7 @@ DRESULT FlashRead(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 		return RES_ERROR;
 	}
 
-	memcpy(buff, START_ADDRESS + sector * SECTOR_SIZE, count * SECTOR_SIZE);
+	memcpy(buff, (const void *)(START_ADDRESS + sector * SECTOR_SIZE), count * SECTOR_SIZE);
 
 	return RES_OK;
 }
