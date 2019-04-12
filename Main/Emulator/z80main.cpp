@@ -7,11 +7,12 @@
 #include "z80input.h"
 #include "Keyboard/ps2Keyboard.h"
 
-//#define SOUND
+//#define BEEPER
 #define CYCLES_PER_STEP 69888
 #define RAM_AVAILABLE 0xC000
 
 SpectrumScreen* _spectrumScreen;
+Sound::Ay3_8912_state _ay3_8912;
 uint8_t RamBuffer[RAM_AVAILABLE];
 Z80_STATE _zxCpu;
 
@@ -30,7 +31,7 @@ extern "C"
     void writebyte(uint16_t addr, uint8_t data);
     void writeword(uint16_t addr, uint16_t data);
     uint8_t input(uint8_t portLow, uint8_t portHigh);
-    void output(uint16_t port, uint8_t data);
+    void output(uint8_t portLow, uint8_t portHigh, uint8_t data);
 }
 
 void zx_setup(SpectrumScreen* spectrumScreen)
@@ -45,7 +46,7 @@ void zx_setup(SpectrumScreen* spectrumScreen)
     _zxContext.input = input;
     _zxContext.output = output;
 
-#ifdef SOUND
+#ifdef BEEPER
     // Sound
     GPIO_InitTypeDef GPIO_InitStruct;
     GPIO_InitStruct.Pin = GPIO_PIN_12;
@@ -194,6 +195,8 @@ extern "C" uint8_t input(uint8_t portLow, uint8_t portHigh)
 {
     if (portLow == 0xFE)
     {
+    	// Keyboard
+
         switch (portHigh)
         {
         case 0xFE:
@@ -220,15 +223,25 @@ extern "C" uint8_t input(uint8_t portLow, uint8_t portHigh)
         }
     }
 
+    // Sound (AY-3-8912)
+    if (portLow == 0xFD)
+    {
+        switch (portHigh)
+        {
+        case 0xFF:
+        	return _ay3_8912.getRegisterData();
+        }
+    }
+
     uint8_t data = zx_data;
     data |= (0xe0); /* Set bits 5-7 - as reset above */
     data &= ~0x40;
     return data;
 }
 
-extern "C" void output(uint16_t port, uint8_t data)
+extern "C" void output(uint8_t portLow, uint8_t portHigh, uint8_t data)
 {
-    switch (port)
+    switch (portLow)
     {
     case 0xFE:
     {
@@ -239,7 +252,7 @@ extern "C" void output(uint16_t port, uint8_t data)
             *_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(borderColor) >> 8;
     	}
 
-#ifdef SOUND
+#ifdef BEEPER
         uint8_t sound = (data & 0x10);
     	if ((indata[0x20] & 0x10) != sound)
     	{
@@ -257,6 +270,20 @@ extern "C" void output(uint16_t port, uint8_t data)
         indata[0x20] = data;
     }
     break;
+
+    case 0xFD:
+    {
+        // Sound (AY-3-8912)
+        switch (portHigh)
+        {
+        case 0xFF:
+        	_ay3_8912.selectRegister(data);
+        case 0xBF:
+        	_ay3_8912.setRegisterData(data);
+        }
+    }
+    break;
+
     default:
         zx_data = data;
         break;

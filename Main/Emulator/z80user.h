@@ -93,7 +93,7 @@ typedef struct CONTEXT {
 	void(*writebyte)(uint16_t, uint8_t);
 	void(*writeword)(uint16_t, uint16_t);
 	uint8_t(*input)(uint8_t, uint8_t);
-	void(*output)(uint16_t, uint8_t);
+	void(*output)(uint8_t, uint8_t, uint8_t);
 } CONTEXT;
 
 #define Z80_READ_BYTE(address, x)                          \
@@ -121,9 +121,9 @@ typedef struct CONTEXT {
         (x) = ((CONTEXT*)context)->input(portLow, portHigh); \
 }
 
-#define Z80_OUTPUT_BYTE(port, x)                           \
+#define Z80_OUTPUT_BYTE(portLow, portHigh, x)              \
 {                                                          \
-        ((CONTEXT*)context)->output(port, x);              \
+        ((CONTEXT*)context)->output(portLow, portHigh, x); \
 }                                                                      
 
 #define Z80_FETCH_BYTE(address, x)		Z80_READ_BYTE((address), (x))
