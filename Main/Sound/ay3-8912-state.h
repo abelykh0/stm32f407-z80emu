@@ -27,11 +27,16 @@ public:
 	uint8_t ioPortA;
 
 	// Status
-	uint8_t selectedRegister;
+	uint8_t selectedRegister = 0;
+	int8_t channelNote[3] = { 0, 0, 0 };
+	int8_t channelVolume[3] = { 0, 0, 0 };
 
 	void selectRegister(uint8_t registerNumber);
 	void setRegisterData(uint8_t data);
 	uint8_t getRegisterData();
+
+private:
+	void updated();
 };
 
 }
