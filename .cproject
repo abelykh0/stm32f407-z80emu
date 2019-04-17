@@ -113,12 +113,15 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="fr.ac6.managedbuild.config.gnu.cross.exe.debug.1460245454.1334891542" name="syscalls.c" rcbsApplicability="disable" resourcePath="Src/syscalls.c" toolsToInvoke="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.991696922.1243078735">
+						<tool id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.991696922.1243078735" name="MCU GCC Compiler" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.991696922"/>
+					</fileInfo>
 					<sourceEntries>
 						<entry excluding="Vga" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Drivers"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Main"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Middlewares"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
+						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup"/>
 					</sourceEntries>
 				</configuration>
@@ -238,6 +241,9 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
+					<fileInfo id="fr.ac6.managedbuild.config.gnu.cross.exe.release.1966078265.943719718" name="syscalls.c" rcbsApplicability="disable" resourcePath="Src/syscalls.c" toolsToInvoke="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.991696922.1973912292">
+						<tool id="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.991696922.1973912292" name="MCU GCC Compiler" superClass="fr.ac6.managedbuild.tool.gnu.cross.c.compiler.991696922"/>
+					</fileInfo>
 					<folderInfo id="fr.ac6.managedbuild.config.gnu.cross.exe.release.1966078265.866991483" name="/" resourcePath="Main">
 						<toolChain id="fr.ac6.managedbuild.toolchain.gnu.cross.exe.release.1781804193" name="Ac6 STM32 MCU GCC" superClass="fr.ac6.managedbuild.toolchain.gnu.cross.exe.release" unusedChildren="">
 							<option id="fr.ac6.managedbuild.option.gnu.cross.prefix.551538607.2009624179" name="Prefix" superClass="fr.ac6.managedbuild.option.gnu.cross.prefix.551538607"/>
@@ -269,7 +275,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Inc"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Main"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Middlewares"/>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
+						<entry excluding="syscalls.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Src"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="startup"/>
 					</sourceEntries>
 				</configuration>
@@ -289,7 +295,7 @@
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Debug">
-			<resource resourceType="PROJECT" workspacePath="stm32f407-z80emu"/>
+			<resource resourceType="PROJECT" workspacePath="/stm32f407-z80emu"/>
 		</configuration>
 		<configuration configurationName="Release"/>
 	</storageModule>

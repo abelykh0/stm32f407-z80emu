@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <stdio.h>
 #include "stm32f4xx.h"
 #include "m4vgalib/vga.h"
 #include "m4vgalib/timing.h"
