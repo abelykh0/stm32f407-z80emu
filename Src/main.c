@@ -25,6 +25,8 @@
 /* USER CODE BEGIN Includes */
 #include "startup.h"
 #include "fatfs.h"
+#include "Sound/usb_device.h"
+#include "Sound/usbd_midi_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -102,8 +104,13 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
+
   /* USER CODE BEGIN 2 */
-  //MX_USB_DEVICE_Init();
+
+  // USB MIDI
+  HAL_NVIC_SetPriority(OTG_FS_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(OTG_FS_IRQn);
+  MX_USB_DEVICE_Init();
 
   /**SDIO GPIO Configuration
     PC8     ------> SDIO_D0  (initialized in MX_SDIO_SD_Init)
