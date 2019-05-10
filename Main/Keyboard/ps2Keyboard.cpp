@@ -6,20 +6,20 @@
 
 typedef enum
 {
-    IDLE = 0,
-    BIT0,
-    BIT1,
-    BIT2,
-    BIT3,
-    BIT4,
-    BIT5,
-    BIT6,
-    BIT7,
-    PARITY,
-    STOP
+    IDLE = 10,
+    BIT0 = 0,
+    BIT1 = 1,
+    BIT2 = 2,
+    BIT3 = 3,
+    BIT4 = 4,
+    BIT5 = 5,
+    BIT6 = 6,
+    BIT7 = 7,
+    PARITY = 8,
+    STOP = 9
 } ps2_read_status;
 
-static ps2_read_status ps2_status;
+static int32_t ps2_status;
 static int32_t kb_data;
 
 static uint8_t lastClk = 1;
@@ -316,48 +316,26 @@ inline void Update(uint8_t dataBit)
         ps2_status = BIT0;
         _parity = 0;
         break;
+
     case BIT0:
         ps2_status = BIT1;
         kb_data |= dataBit;
-        _parity += dataBit;
+        _parity ^= dataBit;
         break;
+
     case BIT1:
-        ps2_status = BIT2;
-        kb_data = kb_data | (dataBit << 1);
-        _parity += dataBit;
-        break;
     case BIT2:
-        ps2_status = BIT3;
-        kb_data = kb_data | (dataBit << 2);
-        _parity += dataBit;
-        break;
     case BIT3:
-        ps2_status = BIT4;
-        kb_data = kb_data | (dataBit << 3);
-        _parity += dataBit;
-        break;
     case BIT4:
-        ps2_status = BIT5;
-        kb_data = kb_data | (dataBit << 4);
-        _parity += dataBit;
-        break;
     case BIT5:
-        ps2_status = BIT6;
-        kb_data = kb_data | (dataBit << 5);
-        _parity += dataBit;
-        break;
     case BIT6:
-        ps2_status = BIT7;
-        kb_data = kb_data | (dataBit << 6);
-        _parity += dataBit;
-        break;
     case BIT7:
-        ps2_status = PARITY;
-        kb_data = kb_data | (dataBit << 7);
-        _parity += dataBit;
+        kb_data |= (dataBit << ps2_status);
+        ps2_status++;
+        _parity ^= dataBit;
         break;
+
     case PARITY:
-        _parity &= 1;
         if (_parity == dataBit) 
         {
             // Parity error
@@ -368,6 +346,7 @@ inline void Update(uint8_t dataBit)
         }
         ps2_status = STOP;
         break;
+
     case STOP:
         ps2_status = IDLE;
         if (_parity != 0xFD)
@@ -390,7 +369,7 @@ __attribute__((section(".ramcode")))
 void vga_hblank_interrupt()
 {
     uint32_t gpioBits = GPIOB->IDR;
-    uint8_t clkBit = (gpioBits & CLK_PIN) ? 1 : 0;
+    uint16_t clkBit = (gpioBits & CLK_PIN);
     uint8_t dataBit = (gpioBits & DATA_PIN) ? 1 : 0;
 
     if (clkBit == 0)

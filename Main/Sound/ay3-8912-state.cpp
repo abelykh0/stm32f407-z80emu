@@ -89,7 +89,7 @@ void Ay3_8912_state::updated()
 
 		if (this->channelNote[channel] != oldChannelNote[channel])
 		{
-			midiMessage(MIDI_NOTE_ON, 0, this->channelNote[channel], 0);
+			midiMessage(MIDI_NOTE_ON, 0, this->channelNote[channel], 0x70);
 		}
 	}
 }
