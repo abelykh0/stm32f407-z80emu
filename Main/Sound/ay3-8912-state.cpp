@@ -23,17 +23,17 @@ void Ay3_8912_state::updated()
 	{
 	case 0:
 	case 1:
-		pitch = ((this->coarsePitchChannelA << 8) + this->finePitchChannelA) & 0x0FFF;
+		pitch = ((this->coarsePitchChannelA << 8) | this->finePitchChannelA) & 0x0FFF;
 		this->channelNote[0] = pitchToNote[pitch];
 		break;
 	case 2:
 	case 3:
-		pitch = ((this->coarsePitchChannelB << 8) + this->finePitchChannelB) & 0x0FFF;
+		pitch = ((this->coarsePitchChannelB << 8) | this->finePitchChannelB) & 0x0FFF;
 		this->channelNote[1] = pitchToNote[pitch];
 		break;
 	case 4:
 	case 5:
-		pitch = ((this->coarsePitchChannelC << 8) + this->finePitchChannelC) & 0x0FFF;
+		pitch = ((this->coarsePitchChannelC << 8) | this->finePitchChannelC) & 0x0FFF;
 		this->channelNote[2] = pitchToNote[pitch];
 		break;
 	case 6:
@@ -74,23 +74,15 @@ void Ay3_8912_state::updated()
 			if (this->channelVolume[channel] > 0)
 			{
 				midiMessage(MIDI_PROGRAM_CHANGE, channel, MIDI_INSTRUMENT_LEAD1, 0);
-				midiMessage(MIDI_CONTROL_CHANGE, channel, MIDI_CC_VOLUME, this->channelVolume[channel]);
 			}
+
+			midiMessage(MIDI_CONTROL_CHANGE, channel, MIDI_CC_VOLUME, this->channelVolume[channel]);
 		}
-
-
 
 		if (this->channelNote[channel] != oldChannelNote[channel])
 		{
-			if (oldChannelVolume[channel] > 0)
-			{
-				midiMessage(MIDI_NOTE_OFF, 0, oldChannelNote[channel], 0);
-			}
-
-			if (this->channelVolume[channel] > 0)
-			{
-				midiMessage(MIDI_NOTE_ON, 0, this->channelNote[channel], 0x70);
-			}
+			midiMessage(MIDI_NOTE_OFF, 0, oldChannelNote[channel], 0);
+			midiMessage(MIDI_NOTE_ON, 0, this->channelNote[channel], 0x70);
 		}
 	}
 }
