@@ -13,7 +13,7 @@ extern "C" {
 #define MIDI_PROGRAM_CHANGE 0xC0
 
 #define MIDI_CC_VOLUME 7
-#define MIDI_INSTRUMENT_LEAD1 81
+#define MIDI_INSTRUMENT_LEAD1 80
 
 void midiMessage(uint8_t message, uint8_t channel, uint8_t data1, uint8_t data2);
 
