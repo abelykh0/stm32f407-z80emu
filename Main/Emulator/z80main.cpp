@@ -271,15 +271,30 @@ extern "C" void output(uint8_t portLow, uint8_t portHigh, uint8_t data)
     }
     break;
 
+    case 0xF5:
+    {
+        // Sound (AY-3-8912)
+        switch (portHigh)
+        {
+        case 0xC0:
+        	_ay3_8912.selectRegister(data);
+        	break;
+        }
+    }
+    break;
+
     case 0xFD:
     {
         // Sound (AY-3-8912)
         switch (portHigh)
         {
         case 0xFF:
+        	// Not sure if this one is correct
         	_ay3_8912.selectRegister(data);
+        	break;
         case 0xBF:
         	_ay3_8912.setRegisterData(data);
+        	break;
         }
     }
     break;

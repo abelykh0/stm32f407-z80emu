@@ -79,6 +79,12 @@ void Ay3_8912_state::updated()
 			midiMessage(MIDI_CONTROL_CHANGE, channel, MIDI_CC_VOLUME, this->channelVolume[channel]);
 		}
 
+		if (this->channelVolume[channel] == 0)
+		{
+			this->channelNote[channel] = 0;
+			continue;
+		}
+
 		if (this->channelNote[channel] != oldChannelNote[channel])
 		{
 			midiMessage(MIDI_NOTE_OFF, 0, oldChannelNote[channel], 0);
