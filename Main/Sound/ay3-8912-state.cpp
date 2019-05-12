@@ -8,8 +8,8 @@ namespace Sound
 
 void Ay3_8912_state::updated()
 {
-	int8_t oldChannelNote[3];
-	int8_t oldChannelVolume[3];
+	uint8_t oldChannelNote[3];
+	uint8_t oldChannelVolume[3];
 
 	for (int8_t channel = 0; channel < 3; channel++)
 	{
@@ -81,7 +81,7 @@ void Ay3_8912_state::updated()
 
 		if (this->channelVolume[channel] == 0)
 		{
-			this->channelNote[channel] = 0;
+			this->channelNote[channel] = 0xFF;
 			continue;
 		}
 

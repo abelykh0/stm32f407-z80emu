@@ -10,26 +10,26 @@ class Ay3_8912_state
 {
 public:
 	// Registers
-	uint8_t finePitchChannelA;
-	uint8_t coarsePitchChannelA;
-	uint8_t finePitchChannelB;
-	uint8_t coarsePitchChannelB;
-	uint8_t finePitchChannelC;
-	uint8_t coarsePitchChannelC;
-	uint8_t noisePitch;
-	uint8_t mixer;
-	uint8_t volumeChannelA;
-	uint8_t volumeChannelB;
-	uint8_t volumeChannelC;
-	uint8_t envelopeFineDuration;
-	uint8_t envelopeCoarseDuration;
-	uint8_t envelopeShape;
-	uint8_t ioPortA;
+	uint8_t finePitchChannelA = 0xFF;
+	uint8_t coarsePitchChannelA = 0xFF;
+	uint8_t finePitchChannelB = 0xFF;
+	uint8_t coarsePitchChannelB = 0xFF;
+	uint8_t finePitchChannelC = 0xFF;
+	uint8_t coarsePitchChannelC = 0xFF;
+	uint8_t noisePitch = 0xFF;
+	uint8_t mixer = 0xFF;
+	uint8_t volumeChannelA = 0xFF;
+	uint8_t volumeChannelB = 0xFF;
+	uint8_t volumeChannelC = 0xFF;
+	uint8_t envelopeFineDuration = 0xFF;
+	uint8_t envelopeCoarseDuration = 0xFF;
+	uint8_t envelopeShape = 0xFF;
+	uint8_t ioPortA = 0xFF;
 
 	// Status
-	uint8_t selectedRegister = 0;
-	int8_t channelNote[3] = { 0, 0, 0 };
-	int8_t channelVolume[3] = { 0, 0, 0 };
+	uint8_t selectedRegister = 0xFF;
+	uint8_t channelNote[3] = { 0xFF, 0xFF, 0xFF };
+	uint8_t channelVolume[3] = { 0xFF, 0xFF, 0xFF };
 
 	void selectRegister(uint8_t registerNumber);
 	void setRegisterData(uint8_t data);
