@@ -13,8 +13,9 @@ void Ay3_8912_state::updated()
 
 	for (int8_t channel = 0; channel < 3; channel++)
 	{
-		oldChannelNote[channel] = this->channelNote[channel];
-		oldChannelVolume[channel] = this->channelVolume[channel];
+		uint8_t channelVolume = this->channelVolume[channel];
+		oldChannelNote[channel] = channelVolume ? this->channelNote[channel] : 0xFF;
+		oldChannelVolume[channel] = channelVolume;
 	}
 
 	int16_t pitch;
@@ -81,7 +82,11 @@ void Ay3_8912_state::updated()
 
 		if (this->channelVolume[channel] == 0)
 		{
-			this->channelNote[channel] = 0xFF;
+			if (oldChannelNote[channel] != 0xFF)
+			{
+				midiMessage(MIDI_NOTE_OFF, 0, oldChannelNote[channel], 0);
+			}
+
 			continue;
 		}
 
