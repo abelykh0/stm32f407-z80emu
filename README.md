@@ -7,6 +7,7 @@ Spectrum ZX 48K emulator (using STM32F407 microcontroller)
 * Emulate Spectrum ZX 48K
 * Load snapshot in .Z80 format from SD card
 * Save snapshot in .Z80 format to SD card
+* Output some sounds to USB MIDI
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=PQxoNzHJnkY
 " target="_blank"><img src="http://img.youtube.com/vi/PQxoNzHJnkY/0.jpg" 
@@ -56,6 +57,6 @@ This project uses several libraries (in addition to HAL drivers from STMicroelec
 * FATFS for SD card: http://elm-chan.org/fsw/ff/00index_e.html
 
 ## Plans for the future / issues
+* Interference when using SD card or playing sound
 * Flickering in some games
 * The speed is 12% faster than it is supposed to be
-* Sound
