@@ -10,7 +10,7 @@
 #include "Keyboard/ps2Keyboard.h"
 #include "Emulator/z80main.h"
 #include "Emulator/z80snapshot.h"
-#include "Emulator/z80emu/z80emu.h"
+#include "Emulator/z80.h"
 #include "resources/keyboard.h"
 
 using namespace etl::stm32f4xx;
@@ -338,7 +338,7 @@ void showRegisters()
 	showTitle("Registers. ESC - clear");
 
     char* buf = (char*)_buffer16K_1;
-
+/*
     sprintf(buf, "PC %04x  AF %04x  AF' %04x  I %02x",
         _zxCpu.pc, _zxCpu.registers.word[Z80_AF],
         _zxCpu.alternates[Z80_AF], _zxCpu.i);
@@ -355,4 +355,5 @@ void showRegisters()
         _zxCpu.registers.word[Z80_IY], _zxCpu.registers.word[Z80_HL],
         _zxCpu.alternates[Z80_HL]);
     DebugScreen.PrintAlignCenter(5, buf);
+*/
 }

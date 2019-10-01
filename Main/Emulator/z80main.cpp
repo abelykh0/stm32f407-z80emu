@@ -14,9 +14,8 @@
 SpectrumScreen* _spectrumScreen;
 Sound::Ay3_8912_state _ay3_8912;
 uint8_t RamBuffer[RAM_AVAILABLE];
-Z80_STATE _zxCpu;
+z80_t _zxCpu;
 
-static CONTEXT _zxContext;
 static uint16_t _attributeCount;
 static int _total;
 static int _next_total = 0;
@@ -26,12 +25,7 @@ static uint32_t _ticks = 0;
 
 extern "C"
 {
-    uint8_t readbyte(uint16_t addr);
-    uint16_t readword(uint16_t addr);
-    void writebyte(uint16_t addr, uint8_t data);
-    void writeword(uint16_t addr, uint16_t data);
-    uint8_t input(uint8_t portLow, uint8_t portHigh);
-    void output(uint8_t portLow, uint8_t portHigh, uint8_t data);
+    uint64_t cpu_tick(int num, uint64_t pins, void* user_data);
 }
 
 void zx_setup(SpectrumScreen* spectrumScreen)
@@ -39,12 +33,8 @@ void zx_setup(SpectrumScreen* spectrumScreen)
 	_spectrumScreen = spectrumScreen;
 	_attributeCount = spectrumScreen->Settings.TextColumns * spectrumScreen->Settings.TextRows;
 
-    _zxContext.readbyte = readbyte;
-    _zxContext.readword = readword;
-    _zxContext.writeword = writeword;
-    _zxContext.writebyte = writebyte;
-    _zxContext.input = input;
-    _zxContext.output = output;
+	z80_desc_t init = { .tick_cb = cpu_tick, .user_data = NULL };
+	z80_init(&_zxCpu, &init);
 
 #ifdef BEEPER
     // Sound
@@ -62,14 +52,14 @@ void zx_reset()
 {
     memset(indata, 0xFF, 128);
     *_spectrumScreen->Settings.BorderColor = 0x15;
-    Z80Reset(&_zxCpu);
+    z80_reset(&_zxCpu);
 }
 
 int32_t zx_loop()
 {
     int32_t result = -1;
 
-    _total += Z80Emulate(&_zxCpu, _next_total - _total, &_zxContext);
+    _total += z80_exec(&_zxCpu, _next_total - _total);
 
     if (_total >= _next_total)
     {
@@ -113,7 +103,8 @@ int32_t zx_loop()
             }
         }
 
-        Z80Interrupt(&_zxCpu, 0xff, &_zxContext);
+        //Z80Interrupt(&_zxCpu, 0xff, &_zxContext);
+        _zxCpu.pins |= Z80_INT;
 
         // delay
         while (_spectrumScreen->_frames < _ticks)
@@ -126,7 +117,7 @@ int32_t zx_loop()
     return result;
 }
 
-extern "C" uint8_t readbyte(uint16_t addr)
+inline uint8_t readbyte(uint16_t addr)
 {
     uint8_t res;
     if (addr >= (uint16_t)0x5B00)
@@ -158,12 +149,7 @@ extern "C" uint8_t readbyte(uint16_t addr)
     return res;
 }
 
-extern "C" uint16_t readword(uint16_t addr)
-{
-    return ((readbyte(addr + 1) << 8) | readbyte(addr));
-}
-
-extern "C" void writebyte(uint16_t addr, uint8_t data)
+inline void writebyte(uint16_t addr, uint8_t data)
 {
     if (addr >= (uint16_t)0x5B00)
     {
@@ -185,13 +171,7 @@ extern "C" void writebyte(uint16_t addr, uint8_t data)
     }
 }
 
-extern "C" void writeword(uint16_t addr, uint16_t data)
-{
-    writebyte(addr, (uint8_t)data);
-    writebyte(addr + 1, (uint8_t)(data >> 8));
-}
-
-extern "C" uint8_t input(uint8_t portLow, uint8_t portHigh)
+inline uint8_t input(uint8_t portLow, uint8_t portHigh)
 {
     if (portLow == 0xFE)
     {
@@ -239,7 +219,7 @@ extern "C" uint8_t input(uint8_t portLow, uint8_t portHigh)
     return data;
 }
 
-extern "C" void output(uint8_t portLow, uint8_t portHigh, uint8_t data)
+inline void output(uint8_t portLow, uint8_t portHigh, uint8_t data)
 {
     switch (portLow)
     {
@@ -303,4 +283,33 @@ extern "C" void output(uint8_t portLow, uint8_t portHigh, uint8_t data)
         zx_data = data;
         break;
     }
+}
+
+extern "C" uint64_t cpu_tick(int num, uint64_t pins, void* user_data)
+{
+    if (pins & Z80_MREQ)
+    {
+        if (pins & Z80_RD)
+        {
+            Z80_SET_DATA(pins, readbyte(Z80_GET_ADDR(pins)));
+        }
+        else if (pins & Z80_WR)
+        {
+        	writebyte(Z80_GET_ADDR(pins), Z80_GET_DATA(pins));
+        }
+    }
+    else if (pins & Z80_IORQ)
+    {
+        if (pins & Z80_RD)
+        {
+            uint16_t port = Z80_GET_ADDR(pins);
+            Z80_SET_DATA(pins, input(port & 0xFF, port >> 8));
+        }
+        else if (pins & Z80_WR)
+        {
+        	uint16_t port = Z80_GET_ADDR(pins);
+        	output(port & 0xFF, port >> 8, Z80_GET_DATA(pins));
+        }
+    }
+    return pins;
 }
