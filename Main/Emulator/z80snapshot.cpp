@@ -3,7 +3,7 @@
 
 #include "z80snapshot.h"
 #include "Emulator/z80main.h"
-#include "Emulator/z80.h"
+#include "Emulator/z80emu/z80emu.h"
 #include "Emulator/SpectrumScreen.h"
 
 /*
@@ -512,24 +512,25 @@ void ReadState(FileHeader* header)
 		header->Flags1 = 1;
 	}
 
-	z80_set_a(&_zxCpu, header->A);
-	z80_set_f(&_zxCpu, header->F);
-	z80_set_bc(&_zxCpu, header->BC);
-	z80_set_hl(&_zxCpu, header->HL);
-	z80_set_sp(&_zxCpu, header->SP);
-	z80_set_i(&_zxCpu, header->InterruptRegister);
-	z80_set_r(&_zxCpu, (header->RefreshRegister & 0x7F) | ((header->Flags1 & 0x01) << 7));
-	z80_set_im(&_zxCpu, header->Flags2 & 0x3);
-	z80_set_de(&_zxCpu, header->DE);
-	z80_set_bc_(&_zxCpu, header->BC_Dash);
-	z80_set_de_(&_zxCpu, header->DE_Dash);
-	z80_set_hl_(&_zxCpu, header->HL_Dash);
-	z80_set_af_(&_zxCpu, header->F_Dash | (header->A_Dash << 8));
-	z80_set_iy(&_zxCpu, header->IY);
-	z80_set_ix(&_zxCpu, header->IX);
-	z80_set_iff1(&_zxCpu, header->InterruptFlipFlop);
-	z80_set_iff2(&_zxCpu, header->IFF2);
-	z80_set_pc(&_zxCpu, header->PC);
+	_zxCpu.registers.byte[Z80_A] = header->A;
+	_zxCpu.registers.byte[Z80_F] = header->F;
+	_zxCpu.registers.word[Z80_BC] = header->BC;
+	_zxCpu.registers.word[Z80_HL] = header->HL;
+	_zxCpu.registers.word[Z80_SP] = header->SP;
+	_zxCpu.i = header->InterruptRegister;
+	_zxCpu.r = (header->RefreshRegister & 0x7F)
+			| ((header->Flags1 & 0x01) << 7);
+	_zxCpu.im = header->Flags2 & 0x3;
+	_zxCpu.registers.word[Z80_DE] = header->DE;
+	_zxCpu.alternates[Z80_BC] = header->BC_Dash;
+	_zxCpu.alternates[Z80_DE] = header->DE_Dash;
+	_zxCpu.alternates[Z80_HL] = header->HL_Dash;
+	_zxCpu.alternates[Z80_AF] = header->F_Dash | (header->A_Dash << 8);
+	_zxCpu.registers.word[Z80_IY] = header->IY;
+	_zxCpu.registers.word[Z80_IX] = header->IX;
+	_zxCpu.iff1 = header->InterruptFlipFlop;
+	_zxCpu.iff2 = header->IFF2;
+	_zxCpu.pc = header->PC;
 
 	uint8_t borderColor = (header->Flags1 & 0x0E) >> 1;
 	*_spectrumScreen->Settings.BorderColor = _spectrumScreen->FromSpectrumColor(
@@ -543,34 +544,33 @@ void SaveState(FileHeader* header)
 	header->PagingState = 0;
 	header->AdditionalBlockLength = 54;
 
-	header->A = z80_a(&_zxCpu);
-	header->F = z80_f(&_zxCpu);
-	header->BC = z80_bc(&_zxCpu);
-	header->HL = z80_hl(&_zxCpu);
-	header->SP = z80_sp(&_zxCpu);
-	header->InterruptRegister = z80_i(&_zxCpu);
-	header->RefreshRegister = z80_r(&_zxCpu);
-	header->DE = z80_de(&_zxCpu);
-	header->BC_Dash = z80_bc_(&_zxCpu);
-	header->DE_Dash = z80_de_(&_zxCpu);
-	header->HL_Dash = z80_hl_(&_zxCpu);
-	header->F_Dash = z80_af_(&_zxCpu) & 0xFF;
-	header->A_Dash = (z80_af_(&_zxCpu) & 0xFF00) >> 8;
-	header->IY = z80_iy(&_zxCpu);
-	header->IX = z80_ix(&_zxCpu);
-	header->InterruptFlipFlop = z80_iff1(&_zxCpu);
-	header->IFF2 = z80_iff2(&_zxCpu);
-	header->PC = z80_pc(&_zxCpu);
+	header->A = _zxCpu.registers.byte[Z80_A];
+	header->F = _zxCpu.registers.byte[Z80_F];
+	header->BC = _zxCpu.registers.word[Z80_BC];
+	header->HL = _zxCpu.registers.word[Z80_HL];
+	header->SP = _zxCpu.registers.word[Z80_SP];
+	header->InterruptRegister = _zxCpu.i;
+	header->RefreshRegister = _zxCpu.r;
+	header->DE = _zxCpu.registers.word[Z80_DE];
+	header->BC_Dash = _zxCpu.alternates[Z80_BC];
+	header->DE_Dash = _zxCpu.alternates[Z80_DE];
+	header->HL_Dash = _zxCpu.alternates[Z80_HL];
+	header->F_Dash = _zxCpu.alternates[Z80_AF] & 0xFF;
+	header->A_Dash = (_zxCpu.alternates[Z80_AF] & 0xFF00) >> 8;
+	header->IY = _zxCpu.registers.word[Z80_IY];
+	header->IX = _zxCpu.registers.word[Z80_IX];
+	header->InterruptFlipFlop = _zxCpu.iff1;
+	header->IFF2 = _zxCpu.iff2;
+	header->PC = _zxCpu.pc;
 
 	// Bit 0  : Bit 7 of the R-register
 	// Bit 1-3: Border color
-	header->Flags1 = (z80_r(&_zxCpu) & 0x80) >> 7;
+	header->Flags1 = (_zxCpu.r & 0x80) >> 7;
 	uint8_t border = _spectrumScreen->ToSpectrumColor(*_spectrumScreen->Settings.BorderColor);
 	header->Flags1 |= (border & 0x38) >> 2;
 
 	// Bit 0-1: Interrupt mode (0, 1 or 2)
-	header->Flags2 = z80_im(&_zxCpu) & 0x03;
-
+	header->Flags2 = _zxCpu.im & 0x03;
 }
 
 void GetPageInfo(uint8_t* buffer, bool is128Mode, uint8_t pagingState, uint8_t* pageNumber, uint16_t* pageSize)
