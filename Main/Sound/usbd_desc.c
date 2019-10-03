@@ -2,10 +2,12 @@
 #include "usbd_desc.h"
 #include "usbd_conf.h"
 
-#define USBD_VID                     1155
+//#define USBD_VID                     1155
+//#define USBD_PID_FS                  22336
+#define USBD_VID                     0x0499
+#define USBD_PID_FS                  0x1FFF
 #define USBD_LANGID_STRING           1033
 #define USBD_MANUFACTURER_STRING     "STMicroelectronics"
-#define USBD_PID_FS                  22336
 #define USBD_PRODUCT_STRING_FS       "STM32 MIDI"
 #define USBD_CONFIGURATION_STRING_FS "MIDI Config"
 #define USBD_INTERFACE_STRING_FS     "MIDI Interface"
