@@ -81,7 +81,6 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
-  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -104,7 +103,6 @@ int main(void)
   MX_SDIO_SD_Init();
   MX_RTC_Init();
   MX_USB_OTG_FS_PCD_Init();
-
   /* USER CODE BEGIN 2 */
 
   // USB MIDI
