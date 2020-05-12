@@ -20,7 +20,7 @@ If you want to try my project, this is the only part that you need.
 
 | Hardware      |    Qty|
 | ------------- | -----:|
-| [Black F407VET6](http://wiki.stm32duino.com/index.php?title=STM32F407) board | 1
+| [Black F407VET6](https://stm32-base.org/boards/STM32F407VET6-STM32-F4VE-V2.0) board | 1
 | VGA connector | 1
 | PS/2 Keyboard | 1
 | Power supply 5V DC for keyboard | 1
