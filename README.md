@@ -32,7 +32,7 @@ If you want to try my project, this is the only part that you need.
 | Jumper wires | 18
 | ST-Link v2 or clone | 1
 
-Software: Install free IDE [System Workbench for STM32](https://www.st.com/en/development-tools/sw4stm32.html/). I am using Windows 10, however STMicroelectronics claims that it also supports Linux and Mac.
+Software: Install free IDE [STM32CubeIDE](https://www.st.com/en/development-tools/stm32cubeide.html/). I am using Windows 10, however STMicroelectronics claims that it also supports Linux and Mac.
 
 How to connect wires:
 
